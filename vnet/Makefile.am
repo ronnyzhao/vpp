@@ -784,6 +784,26 @@ libvnet_la_SOURCES +=				\
 nobase_include_HEADERS +=			\
   vnet/devices/netmap/netmap.h
 
+########################################
+# TERASPEK
+########################################
+
+libvnet_la_SOURCES +=				\
+  vnet/teraspek/nb_loopback.c			\
+  vnet/teraspek/nb_dedup.c			\
+  vnet/teraspek/nb_slice.c			\
+  vnet/teraspek/nb_desensitization.c		\
+  vnet/teraspek/nb_rc4.c			\
+  vnet/teraspek/nb_policy.c			
+
+nobase_include_HEADERS +=			\
+  vnet/teraspek/nb_loopback.h			\
+  vnet/teraspek/nb_dedup.h			\
+  vnet/teraspek/nb_slice.h			\
+  vnet/teraspek/nb_desensitization.h		\
+  vnet/teraspek/nb_rc4.h			\
+  vnet/teraspek/nb_policy.h		
+
 
 ########################################
 # Driver feature graph arc support
