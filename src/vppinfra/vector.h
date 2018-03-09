@@ -64,6 +64,7 @@
 #if defined (__aarch64__) || defined (__arm__)
 typedef unsigned int u32x4 _vector_size (16);
 typedef u8 u8x16 _vector_size (16);
+typedef u8 u8x32 _vector_size(32);
 typedef u16 u16x8 _vector_size (16);
 typedef u32 u32x4 _vector_size (16);
 typedef u64 u64x2 _vector_size (16);
