@@ -105,8 +105,16 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
   /* if uio sub-directory exists, we are fine, device is
      already bound to UIO driver */
   s = format (s, "%v/uio%c", dev_dir_name, 0);
-  if (access ((char *) s, F_OK) == 0)
-    goto done;
+  
+  if (access ((char *) s, F_OK) == 0) {
+	  if(1 /** Force bind to uio_driver_name. added by tsihang, 12/3/2018 */)
+		  clib_warning ("[TSIHANG] Already bound \"0x%04x 0x%04x\" to %s\n", 
+  				d->vendor_id, d->device_id, s);	
+  	  else goto done;
+  }
+
+  clib_warning ("[TSIHANG] Trying to bind \"0x%04x 0x%04x\" to %s\n", 
+  				d->vendor_id, d->device_id, uio_driver_name);	
   vec_reset_length (s);
 
   /* walk trough all linux interfaces and if interface belonging to
@@ -135,7 +143,7 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
       struct ethtool_drvinfo drvinfo;
 
       if (e->d_name[0] == '.')	/* skip . and .. */
-	continue;
+			continue;
 
       memset (&ifr, 0, sizeof ifr);
       memset (&drvinfo, 0, sizeof drvinfo);
@@ -143,36 +151,36 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
       strncpy (ifr.ifr_name, e->d_name, IFNAMSIZ - 1);
       drvinfo.cmd = ETHTOOL_GDRVINFO;
       if (ioctl (fd, SIOCETHTOOL, &ifr) < 0)
-	{
-	  /* Some interfaces (eg "lo") don't support this ioctl */
-	  if ((errno != ENOTSUP) && (errno != ENODEV))
-	    clib_unix_warning ("ioctl fetch intf %s bus info error",
-			       e->d_name);
-	  continue;
-	}
+		{
+		  /* Some interfaces (eg "lo") don't support this ioctl */
+		  if ((errno != ENOTSUP) && (errno != ENODEV))
+		    clib_unix_warning ("ioctl fetch intf %s bus info error",
+				       e->d_name);
+		  continue;
+		}
 
       if (strcmp ((char *) s, drvinfo.bus_info))
-	continue;
+		 continue;
 
       memset (&ifr, 0, sizeof (ifr));
       strncpy (ifr.ifr_name, e->d_name, IFNAMSIZ - 1);
       if (ioctl (fd, SIOCGIFFLAGS, &ifr) < 0)
-	{
-	  error = clib_error_return_unix (0, "ioctl fetch intf %s flags",
-					  e->d_name);
-	  close (fd);
-	  goto done;
-	}
+		{
+		  error = clib_error_return_unix (0, "ioctl fetch intf %s flags",
+						  e->d_name);
+		  close (fd);
+		  goto done;
+		}
 
       if (ifr.ifr_flags & IFF_UP)
-	{
-	  error = clib_error_return (0, "Skipping PCI device %U as host "
-				     "interface %s is up",
-				     format_vlib_pci_addr, &d->bus_address,
-				     e->d_name);
-	  close (fd);
-	  goto done;
-	}
+		{
+		  error = clib_error_return (0, "Skipping PCI device %U as host "
+					     "interface %s is up",
+					     format_vlib_pci_addr, &d->bus_address,
+					     e->d_name);
+		  close (fd);
+		  goto done;
+		}
     }
 
   close (fd);
@@ -182,12 +190,16 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
   vlib_sysfs_write ((char *) s, "%U", format_vlib_pci_addr, &d->bus_address);
   vec_reset_length (s);
 
-  s = format (s, "/sys/bus/pci/drivers/%s/new_id%c", uio_driver_name, 0);
+  s = format (s, "/sys/bus/pci/drivers/%s/new_id%c", uio_driver_name, 0); 
   vlib_sysfs_write ((char *) s, "0x%04x 0x%04x", d->vendor_id, d->device_id);
+
   vec_reset_length (s);
 
   s = format (s, "/sys/bus/pci/drivers/%s/bind%c", uio_driver_name, 0);
   vlib_sysfs_write ((char *) s, "%U", format_vlib_pci_addr, &d->bus_address);
+
+  clib_warning ("[TSIHANG] Bound \"0x%04x 0x%04x\" to %s success\n", 
+  	d->vendor_id, d->device_id, uio_driver_name);
 
 done:
   closedir (dir);

@@ -2936,8 +2936,24 @@ VLIB_PLUGIN_REGISTER () = {
     .default_disabled = 1,
     .description = "Intel 82599 Family Native Driver (experimental)",
 };
+#else
+
+#include <vlib/vlib.h>
+#include <vlib/unix/unix.h>
+#include <vlib/pci/pci.h>
+#include <vnet/vnet.h>
+#include <ixge/ixge.h>
+#include <vnet/ethernet/ethernet.h>
+#include <vnet/plugin/plugin.h>
+#include <vpp/app/version.h>
 
 
+/* *INDENT-OFF* */
+VLIB_PLUGIN_REGISTER () = {
+    .version = VPP_BUILD_VER,
+    .default_disabled = 0,
+    .description = "Intel 82599 Family Native Driver (experimental)",
+};
 #endif
 
 /* *INDENT-ON* */

@@ -80,7 +80,7 @@ load_one_plugin (plugin_main_t * pm, plugin_info_t * pi, int from_early_init)
 				   &section);
   if (error)
     {
-      clib_warning ("Not a plugin: %s\n", (char *) pi->name);
+      clib_warning ("%s -> Not a plugin: %s\n", __FILE__, (char *) pi->name);
       return -1;
     }
 

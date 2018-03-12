@@ -164,12 +164,13 @@ BASIC_ARCH = \
 
 # x86_64 can be either 32/64.  set BIACH=32 to get 32 bit libraries.
 BIARCH = 64
-
-x86_64_libdir = $(BIARCH)
-native_libdir = $($(NATIVE_ARCH)_libdir)
+#BIARCH = 
+#x86_64_libdir = $(BIARCH)
+#native_libdir = $($(NATIVE_ARCH)_libdir)
 
 # lib or lib64 depending
-arch_lib_dir = lib$($(BASIC_ARCH)_libdir)
+#arch_lib_dir = lib$($(BASIC_ARCH)_libdir)
+arch_lib_dir = lib$(BIARCH)
 
 # OS to configure for.  configure --host will be set to $(ARCH)-$(OS)
 # Allow per-platform overrides
@@ -486,13 +487,12 @@ resolve_dependencies_fn = $(call resolve_dependencies2_fn,$(1),resolve_dependenc
 ######################################################################
 
 # x86_64 can be either 32/64.  set BIACH=32 to get 32 bit libraries.
-BIARCH = 64
 
-x86_64_libdir = $(BIARCH)
-native_libdir = $($(NATIVE_ARCH)_libdir)
+#x86_64_libdir = $(BIARCH)
+#native_libdir = $($(NATIVE_ARCH)_libdir)
 
 # lib or lib64 depending
-arch_lib_dir = lib$($(BASIC_ARCH)_libdir)
+arch_lib_dir = lib$(BIARCH)
 
 # find dynamic linker as absolute path
 TOOL_INSTALL_LIB_DIR=$(TOOL_INSTALL_DIR)/$(TARGET)/$(arch_lib_dir)
@@ -1156,6 +1156,14 @@ wipe-all:
 
 # Clean everything
 distclean:
+	@echo "dump all variables ..."
+	@echo "package_build_dir= "$(PACKAGE_BUILD_DIR)
+	@echo "package_install_dir= "$(PACKAGE_INSTALL_DIR)
+	@echo "native_libdir= "$(native_libdir)
+	@echo "arch_lib_dir= "$(arch_lib_dir)
+	@echo "platform= "$(PLATFORM)
+	@echo "arch= "$(ARCH)
+	@echo "basic_arch= "$(BASIC_ARCH)
 	rm -rf $(MU_BUILD_ROOT_DIR)/$(BUILD_PREFIX_package)*/
 	rm -rf $(MU_BUILD_ROOT_DIR)/$(BUILD_PREFIX_tool)*
 	rm -rf $(MU_BUILD_ROOT_DIR)/$(INSTALL_PREFIX)*
@@ -1167,4 +1175,4 @@ distclean:
 	rm -rf $(MU_BUILD_ROOT_DIR)/python
 	if [ -e /usr/bin/dh ];then (cd $(MU_BUILD_ROOT_DIR)/deb/;debian/rules clean); fi
 	rm -f $(MU_BUILD_ROOT_DIR)/deb/debian/*.install
-	rm -f $(MU_BUILD_ROOT_DIR)/deb/debian/changelog
+	if [ -e /usr/bin/dh ];then rm -f $(MU_BUILD_ROOT_DIR)/deb/debian/changelog; fi

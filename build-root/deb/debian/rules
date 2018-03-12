@@ -27,8 +27,11 @@ export PYBUILD_SYSTEM=distutils
 	dh $@ --with systemd,python2 --buildsystem=pybuild
 
 override_dh_install:
+	@echo "[TSIHANG] --------------------0 $(PWD)"
 	dh_install --exclude .git
+	@echo "[TSIHANG] --------------------1 $(PWD)"
 	../scripts/remove-rpath .
+	@echo "[TSIHANG] --------------------2 $(PWD)"
 
 override_dh_shlibdeps:
 	@dh_shlibdeps 2>&1 \

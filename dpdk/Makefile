@@ -126,6 +126,9 @@ $(B)/custom-config: $(B)/.patch.ok Makefile
 	$(call set,RTE_PCI_CONFIG,y)
 	$(call set,RTE_PCI_EXTENDED_TAG,"on")
 	$(call set,RTE_PCI_MAX_READ_REQUEST_SIZE,4096)
+	$(call set,RTE_KNI_KMOD,y)
+	$(call set,RTE_EAL_IGB_UIO,y)
+	$(call set,RTE_LIBRTE_TIMER,y)
 	@# enable debug init for device drivers
 	$(call set,RTE_LIBRTE_I40E_DEBUG_INIT,$(DPDK_DEBUG))
 	$(call set,RTE_LIBRTE_IXGBE_DEBUG_INIT,$(DPDK_DEBUG))
@@ -139,7 +142,6 @@ $(B)/custom-config: $(B)/.patch.ok Makefile
 	$(call set,RTE_LIBRTE_PMD_AESNI_GCM,$(DPDK_CRYPTO_SW_PMD))
 	$(call set,RTE_LIBRTE_MLX5_PMD,$(DPDK_MLX5_PMD))
 	@# not needed
-	$(call set,RTE_LIBRTE_TIMER,n)
 	$(call set,RTE_LIBRTE_CFGFILE,n)
 	$(call set,RTE_LIBRTE_LPM,n)
 	$(call set,RTE_LIBRTE_ACL,n)
@@ -149,8 +151,6 @@ $(B)/custom-config: $(B)/.patch.ok Makefile
 	$(call set,RTE_LIBRTE_PORT,n)
 	$(call set,RTE_LIBRTE_TABLE,n)
 	$(call set,RTE_LIBRTE_PIPELINE,n)
-	$(call set,RTE_KNI_KMOD,n)
-	$(call set,RTE_EAL_IGB_UIO,n)
 	@rm -f .config.ok
 
 $(CURDIR)/$(DPDK_TARBALL):
@@ -214,7 +214,9 @@ endif
 	@touch $@
 
 .PHONY: patch
-patch: $(B)/.patch.ok
+#patch: $(B)/.patch.ok
+patch: 
+	echo "Patching manually ..."
 
 $(B)/.config.ok: $(B)/.patch.ok $(B)/custom-config
 	@make $(DPDK_MAKE_ARGS) config
@@ -225,6 +227,7 @@ config: $(B)/.config.ok
 
 $(B)/.build.ok: $(DPDK_SOURCE_FILES)
 	@if [ ! -e $(B)/.config.ok ] ; then echo 'Please run "make config" first' && false ; fi
+	echo "dpdk make args ->>> " $(DPDK_MAKE_ARGS)
 ifeq ($(DPDK_CRYPTO_SW_PMD),y)
 	# Build IPsec_MB library
 	mkdir -p $(I)/lib/
@@ -245,7 +248,7 @@ install: $(B)/.build.ok
 
 .PHONY: clean
 clean:
-	@rm -rf $(B) $(I)
+	@rm -rf $(I)
 
 ##############################################################################
 # .deb packaging

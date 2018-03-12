@@ -145,6 +145,8 @@ vlib_sysfs_read (char *file_name, char *fmt, ...)
       return clib_error_return_unix (0, "read `%s'", file_name);
     }
 
+//printf ("[TSIHANG] %s-> %s\n", __func__, file_name);
+  
   _vec_len (s) = sz;
   unformat_init_vector (&input, s);
 

@@ -12,6 +12,8 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
+
+
 libs=$(find $1 -type f -name \*.so\*)
 execs=$(find $1 -type f -path \*/bin/\* )
 
