@@ -1825,6 +1825,8 @@ nicvf_request_sqs(struct nicvf *nic)
 	return nicvf_mbox_request_sqs(nic);
 }
 
+/** added by tsihang. 2018/03/13. */
+static int return_error_while_unsupported = 0;
 static int
 nicvf_dev_configure(struct rte_eth_dev *dev)
 {
@@ -1850,6 +1852,7 @@ nicvf_dev_configure(struct rte_eth_dev *dev)
 	if (rxmode->mq_mode != ETH_MQ_RX_NONE &&
 		rxmode->mq_mode != ETH_MQ_RX_RSS) {
 		PMD_INIT_LOG(INFO, "Unsupported rx qmode %d", rxmode->mq_mode);
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
@@ -1865,36 +1868,43 @@ nicvf_dev_configure(struct rte_eth_dev *dev)
 
 	if (rxmode->split_hdr_size) {
 		PMD_INIT_LOG(INFO, "Rxmode does not support split header");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (rxmode->hw_vlan_filter) {
 		PMD_INIT_LOG(INFO, "VLAN filter not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (rxmode->hw_vlan_extend) {
 		PMD_INIT_LOG(INFO, "VLAN extended not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (rxmode->enable_lro) {
 		PMD_INIT_LOG(INFO, "LRO not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (conf->link_speeds & ETH_LINK_SPEED_FIXED) {
 		PMD_INIT_LOG(INFO, "Setting link speed/duplex not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (conf->dcb_capability_en) {
 		PMD_INIT_LOG(INFO, "DCB enable not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
 	if (conf->fdir_conf.mode != RTE_FDIR_MODE_NONE) {
 		PMD_INIT_LOG(INFO, "Flow director not supported");
+		if (return_error_while_unsupported)
 		return -EINVAL;
 	}
 
@@ -1918,7 +1928,7 @@ nicvf_dev_configure(struct rte_eth_dev *dev)
 		}
 	}
 
-	PMD_INIT_LOG(DEBUG, "Configured ethdev port%d hwcap=0x%" PRIx64,
+	PMD_INIT_LOG(INFO, "Configured ethdev port%d hwcap=0x%" PRIx64,
 		dev->data->port_id, nicvf_hw_cap(nic));
 
 	return 0;

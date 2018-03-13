@@ -102,19 +102,32 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
   u8 *dev_dir_name = format (0, "/sys/bus/pci/devices/%U",
 			     format_vlib_pci_addr, &d->bus_address);
 
+  u8 *drv_dir_name = format (0, "/sys/bus/pci/drivers/%s", 
+  				uio_driver_name);
+  
+  static u8 force_bind2_uio_driver = 1, already_default_bind2_uio = 0;
+  
+  /*
+   * check uio_drv_name .
+   */
+  if (access ((char *)drv_dir_name, F_OK) != 0) {
+	clib_warning ("[TSIHANG] %s unloaded\n", uio_driver_name);
+	goto done;
+  }
+  
+  clib_warning ("[TSIHANG] \"0x%04x 0x%04x\" ", d->vendor_id, d->device_id);
+  
   /* if uio sub-directory exists, we are fine, device is
      already bound to UIO driver */
   s = format (s, "%v/uio%c", dev_dir_name, 0);
-  
   if (access ((char *) s, F_OK) == 0) {
-	  if(1 /** Force bind to uio_driver_name. added by tsihang, 12/3/2018 */)
-		  clib_warning ("[TSIHANG] Already bound \"0x%04x 0x%04x\" to %s\n", 
-  				d->vendor_id, d->device_id, s);	
-  	  else goto done;
+  	  already_default_bind2_uio = 1;
+  	  /** Force bind to uio_driver_name. added by tsihang, 12/3/2018 */
+	  if (!force_bind2_uio_driver)
+	  	goto done;
+	  clib_warning ("already bound to %s\n", s);
   }
 
-  clib_warning ("[TSIHANG] Trying to bind \"0x%04x 0x%04x\" to %s\n", 
-  				d->vendor_id, d->device_id, uio_driver_name);	
   vec_reset_length (s);
 
   /* walk trough all linux interfaces and if interface belonging to
@@ -184,6 +197,14 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
     }
 
   close (fd);
+
+  drv_dir_name = format (drv_dir_name, "/%U", 
+  			format_vlib_pci_addr, &d->bus_address);
+  if (access ((char *)drv_dir_name, F_OK) == 0) {
+	  clib_warning ("already bound to %s\n", uio_driver_name);
+	  goto done;
+  }
+  
   vec_reset_length (s);
 
   s = format (s, "%v/driver/unbind%c", dev_dir_name, 0);
@@ -192,19 +213,19 @@ vlib_pci_bind_to_uio (vlib_pci_device_t * d, char *uio_driver_name)
 
   s = format (s, "/sys/bus/pci/drivers/%s/new_id%c", uio_driver_name, 0); 
   vlib_sysfs_write ((char *) s, "0x%04x 0x%04x", d->vendor_id, d->device_id);
-
   vec_reset_length (s);
 
   s = format (s, "/sys/bus/pci/drivers/%s/bind%c", uio_driver_name, 0);
   vlib_sysfs_write ((char *) s, "%U", format_vlib_pci_addr, &d->bus_address);
 
-  clib_warning ("[TSIHANG] Bound \"0x%04x 0x%04x\" to %s success\n", 
-  	d->vendor_id, d->device_id, uio_driver_name);
+  clib_warning ("%s to %s success\n", already_default_bind2_uio ?
+  	"rebind" : "bind", uio_driver_name);
 
 done:
   closedir (dir);
   vec_free (s);
   vec_free (dev_dir_name);
+  vec_free (drv_dir_name);
   return error;
 }
 
