@@ -1566,7 +1566,7 @@ nicvf_vf_start(struct rte_eth_dev *dev, struct nicvf *nic, uint32_t rbdrsz)
 
 		ret = nicvf_mbox_get_rss_size(nic);
 		if (ret) {
-			PMD_INIT_LOG(ERR, "Failed to get rss table size (ret=%d)", ret);
+			PMD_INIT_LOG(ERR, "Failed to get rss table size");
 			goto qset_rss_error;
 		}
 
@@ -1670,20 +1670,15 @@ nicvf_dev_start(struct rte_eth_dev *dev)
 	}
 
 	ret = nicvf_vf_start(dev, nic, rbdrsz);
-	if (ret != 0) {		
-		PMD_INIT_LOG(INFO, "[TSIHANG] rbdrsz=%d, ret=%d", rbdrsz, ret);
-		//return ret;
-	}
+	if (ret != 0)
+		return ret;
 
 	for (i = 0; i < nic->sqs_count; i++) {
 		assert(nic->snicvf[i]);
 
 		ret = nicvf_vf_start(dev, nic->snicvf[i], rbdrsz);
-		if (ret != 0) {		
-			PMD_INIT_LOG(INFO, "[TSIHANG] rbdrsz=%d, ret=%d", rbdrsz, ret);
-			//return ret;
-		}
-
+		if (ret != 0)
+			return ret;
 	}
 
 	/* Configure callbacks based on scatter mode */

@@ -1,1 +1,0 @@
-cmd_/root/vpp/dpdk/dpdk-stable-17.02.1/build/build/lib/librte_eal/linuxapp/kni/built-in.o :=  rm -f /root/vpp/dpdk/dpdk-stable-17.02.1/build/build/lib/librte_eal/linuxapp/kni/built-in.o; ar rcSTPD /root/vpp/dpdk/dpdk-stable-17.02.1/build/build/lib/librte_eal/linuxapp/kni/built-in.o
