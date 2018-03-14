@@ -169,7 +169,7 @@ x86_64_libdir = $(BIARCH)
 native_libdir = $($(NATIVE_ARCH)_libdir)
 
 # lib or lib64 depending
-arch_lib_dir = lib$($(BASIC_ARCH)_libdir)
+arch_lib_dir = lib$(BIARCH)
 
 # OS to configure for.  configure --host will be set to $(ARCH)-$(OS)
 # Allow per-platform overrides
@@ -492,7 +492,7 @@ x86_64_libdir = $(BIARCH)
 native_libdir = $($(NATIVE_ARCH)_libdir)
 
 # lib or lib64 depending
-arch_lib_dir = lib$($(BASIC_ARCH)_libdir)
+arch_lib_dir = lib$(BIARCH)
 
 # find dynamic linker as absolute path
 TOOL_INSTALL_LIB_DIR=$(TOOL_INSTALL_DIR)/$(TARGET)/$(arch_lib_dir)

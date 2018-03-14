@@ -1,0 +1,26 @@
+Format: 1.8
+Date: Tue, 13 Mar 2018 21:33:16 -0700
+Source: vpp-dpdk
+Binary: vpp-dpdk-dev vpp-dpdk-dkms
+Architecture: arm64
+Version: 17.05.2-vpp6
+Distribution: unstable
+Urgency: low
+Maintainer: vpp-dev@lists.fd.io
+Changed-By: VPP Dev <vpp-dev@lists.fd.io>
+Description:
+ vpp-dpdk-dev - DPDK Development Package for VPP
+ vpp-dpdk-dkms - DPDK Development Package for VPP - Kernel Modules
+Changes:
+ vpp-dpdk (17.05.2-vpp6) unstable; urgency=low
+ .
+   * DPDK Release 17.05.2
+Checksums-Sha1:
+ a1dea107e9c4a164e044c44c1df909fd3fb0ad2d 2246806 vpp-dpdk-dev_17.05.2-vpp6_arm64.deb
+ b230370e252133a1e0ec319bda28519be3debb0f 8118 vpp-dpdk-dkms_17.05.2-vpp6_arm64.deb
+Checksums-Sha256:
+ 7a1fd0bfb5bcdf2a56ee2ba0a697878772fa96b68d7fe8380794a810edf853f9 2246806 vpp-dpdk-dev_17.05.2-vpp6_arm64.deb
+ f501ed0b6d00d1d124b61ced51b6d7808342a2f5ed7f7b6e96c64fd1a8a23c3a 8118 vpp-dpdk-dkms_17.05.2-vpp6_arm64.deb
+Files:
+ dd85bfb437ab30da22d10e907a253410 2246806 net extra vpp-dpdk-dev_17.05.2-vpp6_arm64.deb
+ 5495a11ccd3731721cf9bb61d1df69bb 8118 net extra vpp-dpdk-dkms_17.05.2-vpp6_arm64.deb

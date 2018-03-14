@@ -20,6 +20,7 @@
 
 #include <vnet/ethernet/ethernet.h>
 #include <dpdk/device/dpdk.h>
+#include <dpdk/device/vendors.h>
 #include <vlib/unix/physmem.h>
 #include <vlib/pci/pci.h>
 
@@ -647,7 +648,9 @@ dpdk_bind_devices_to_uio (dpdk_config_main_t * conf)
     vec_reset_length (pci_addr);
     pci_addr = format (pci_addr, "%U%c", format_vlib_pci_addr, &d->bus_address, 0);
 
-    if (d->device_class != PCI_CLASS_NETWORK_ETHERNET && d->device_class != PCI_CLASS_PROCESSOR_CO)
+    if (d->device_class != PCI_CLASS_NETWORK_ETHERNET && 
+		d->device_class != PCI_CLASS_PROCESSOR_CO &&
+		d->device_class != PCI_CLASS_NETWORK_OTHER)
       continue;
 
     if (num_whitelisted)
@@ -661,24 +664,30 @@ dpdk_bind_devices_to_uio (dpdk_config_main_t * conf)
       }
 
     /* virtio */
-    if (d->vendor_id == 0x1af4 && d->device_id == 0x1000)
+    if (d->vendor_id == VIRTIO_PCI_VENDOR_ID  && d->device_id == VIRTIO_PCI_DEVID_LEGACY_NET)
       ;
     /* vmxnet3 */
-    else if (d->vendor_id == 0x15ad && d->device_id == 0x07b0)
+    else if (d->vendor_id == VMWARE_PCI_VENDOR_ID && d->device_id == VMWARE_PCI_DEVID_VMXNET3)
       ;
     /* all Intel network devices */
-    else if (d->vendor_id == 0x8086 && d->device_class == PCI_CLASS_NETWORK_ETHERNET)
+    else if (d->vendor_id == E1000_INTEL_PCI_VENDOR_ID && d->device_class == PCI_CLASS_NETWORK_ETHERNET)
       ;
     /* all Intel QAT devices VFs */
-    else if (d->vendor_id == 0x8086 && d->device_class == PCI_CLASS_PROCESSOR_CO &&
-        (d->device_id == 0x0443 || d->device_id == 0x37c9 || d->device_id == 0x19e3))
+    else if (d->vendor_id == E1000_INTEL_PCI_VENDOR_ID && d->device_class == PCI_CLASS_PROCESSOR_CO &&
+        (d->device_id == E1000_INTEL_PCI_DEVID_QAT0  || d->device_id == E1000_INTEL_PCI_DEVID_QAT1  || d->device_id == E1000_INTEL_PCI_DEVID_QAT2))
       ;
     /* Cisco VIC */
-    else if (d->vendor_id == 0x1137 && d->device_id == 0x0043)
+    else if (d->vendor_id == CISCO_PCI_VENDOR_ID && d->device_id == CISCO_PCI_DEVID_VIC_ENET)
       ;
     /* Chelsio T4/T5 */
-    else if (d->vendor_id == 0x1425 && (d->device_id & 0xe000) == 0x4000)
+    else if (d->vendor_id == CHELSIO_PCI_VENDOR_ID  && (d->device_id & 0xe000) == 0x4000)
       ;
+	/* else for Cavium Thunderx NICVF. */
+	else if (d->vendor_id == CAVIUM_PCI_VENDOR_ID &&
+				(d->device_id == CAVIUM_PCI_DEVID_THUNDERX_NICVF ||
+				d->device_id == CAVIUM_PCI_DEVID_THUNDERX_BGX))
+		;
+
     else
       {
         clib_warning ("Unsupported PCI device 0x%04x:0x%04x found "
@@ -968,6 +977,7 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
       u32 x, *mem_by_socket = 0;
       uword c = 0;
       u8 use_1g = 1;
+	  u8 use_512m = 1;
       u8 use_2m = 1;
       u8 less_than_1g = 1;
       int rv;
@@ -1026,6 +1036,12 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	  if (pages_avail < 0 || page_size * pages_avail < mem)
 	    use_1g = 0;
 
+	  page_size = 512;
+	  pages_avail = vlib_sysfs_get_free_hugepages(c, page_size * 1024);
+
+	  if (pages_avail < 0 || page_size * pages_avail < mem)
+	    use_512m = 0;
+
 	  page_size = 2;
 	  pages_avail = vlib_sysfs_get_free_hugepages(c, page_size * 1024);
 
@@ -1065,13 +1081,19 @@ dpdk_config (vlib_main_t * vm, unformat_input_t * input)
 	  goto done;
 	}
 
-      if (use_1g && !(less_than_1g && use_2m))
+      if (use_1g && !(less_than_1g && use_512m && use_2m))
 	{
+		clib_error_return (0, "Mounting ... 1 GB\n");
 	  rv =
 	    mount ("none", DEFAULT_HUGE_DIR, "hugetlbfs", 0, "pagesize=1G");
 	}
+	  else if (use_512m) {
+		  clib_error_return (0, "Mounting ... 512 MB\n");
+		  rv = mount ("none", DEFAULT_HUGE_DIR, "hugetlbfs", 0, NULL);
+	  }
       else if (use_2m)
 	{
+	clib_error_return (0, "Mounting ... 2 MB\n");
 	  rv = mount ("none", DEFAULT_HUGE_DIR, "hugetlbfs", 0, NULL);
 	}
       else
