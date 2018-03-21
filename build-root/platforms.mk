@@ -35,9 +35,9 @@
 #
 
 # Platform selects e.g. Linux config file
-PLATFORM = native
+PLATFORM = aarch64
 
-native_arch = native
+native_arch = aarch64
 
 # Default for which packages go into read-only image
 # used to have pam
@@ -47,4 +47,5 @@ default_root_packages = bash coreutils sysvinit util-linux mingetty procps
 i686_arch = i686
 x86_64_arch = x86_64
 ppc_arch = ppc
+thunderx_arch = aarch64
 

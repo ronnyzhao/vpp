@@ -1,0 +1,5260 @@
+diff -uNr dpdk-stable-17.05.2/app/test-crypto-perf/cperf_ops.c dpdk-17.05/app/test-crypto-perf/cperf_ops.c
+--- dpdk-stable-17.05.2/app/test-crypto-perf/cperf_ops.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-crypto-perf/cperf_ops.c	2017-05-10 18:11:34.000000000 -0700
+@@ -151,13 +151,14 @@
+ 			if (options->out_of_place) {
+ 				buf =  bufs_out[i];
+ 			} else {
+-				tbuf =  bufs_in[i];
++				buf =  bufs_in[i];
++
++				tbuf = buf;
+ 				while ((tbuf->next != NULL) &&
+ 						(offset >= tbuf->data_len)) {
+ 					offset -= tbuf->data_len;
+ 					tbuf = tbuf->next;
+ 				}
+-				buf = tbuf;
+ 			}
+ 
+ 			sym_op->auth.digest.data = rte_pktmbuf_mtod_offset(buf,
+@@ -229,13 +230,14 @@
+ 			if (options->out_of_place) {
+ 				buf =  bufs_out[i];
+ 			} else {
+-				tbuf =  bufs_in[i];
++				buf =  bufs_in[i];
++
++				tbuf = buf;
+ 				while ((tbuf->next != NULL) &&
+ 						(offset >= tbuf->data_len)) {
+ 					offset -= tbuf->data_len;
+ 					tbuf = tbuf->next;
+ 				}
+-				buf = tbuf;
+ 			}
+ 
+ 			sym_op->auth.digest.data = rte_pktmbuf_mtod_offset(buf,
+@@ -306,13 +308,14 @@
+ 			if (options->out_of_place) {
+ 				buf =  bufs_out[i];
+ 			} else {
+-				tbuf =  bufs_in[i];
++				buf =  bufs_in[i];
++
++				tbuf = buf;
+ 				while ((tbuf->next != NULL) &&
+ 						(offset >= tbuf->data_len)) {
+ 					offset -= tbuf->data_len;
+ 					tbuf = tbuf->next;
+ 				}
+-				buf = tbuf;
+ 			}
+ 
+ 			sym_op->auth.digest.data = rte_pktmbuf_mtod_offset(buf,
+diff -uNr dpdk-stable-17.05.2/app/test-crypto-perf/cperf_options_parsing.c dpdk-17.05/app/test-crypto-perf/cperf_options_parsing.c
+--- dpdk-stable-17.05.2/app/test-crypto-perf/cperf_options_parsing.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-crypto-perf/cperf_options_parsing.c	2017-05-10 18:11:34.000000000 -0700
+@@ -312,7 +312,7 @@
+ 					&opts->min_buffer_size,
+ 					&opts->max_buffer_size);
+ 		if (ret < 0) {
+-			RTE_LOG(ERR, USER1, "failed to parse buffer size/s\n");
++			RTE_LOG(ERR, USER1, "failed to parse burst size/s\n");
+ 			return -1;
+ 		}
+ 		opts->buffer_size_count = ret;
+diff -uNr dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_latency.c dpdk-17.05/app/test-crypto-perf/cperf_test_latency.c
+--- dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_latency.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-crypto-perf/cperf_test_latency.c	2017-05-10 18:11:34.000000000 -0700
+@@ -547,7 +547,6 @@
+ 	if (ctx == NULL)
+ 		return;
+ 
+-	rte_cryptodev_stop(ctx->dev_id);
+-
+ 	cperf_latency_test_free(ctx, ctx->options->pool_sz);
++
+ }
+diff -uNr dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_throughput.c dpdk-17.05/app/test-crypto-perf/cperf_test_throughput.c
+--- dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_throughput.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-crypto-perf/cperf_test_throughput.c	2017-05-10 18:11:34.000000000 -0700
+@@ -471,14 +471,14 @@
+ 					cycles_per_packet);
+ 		} else {
+ 			if (!only_once)
+-				printf("#lcore id,Buffer Size(B),"
++				printf("# lcore id, Buffer Size(B),"
+ 					"Burst Size,Enqueued,Dequeued,Failed Enq,"
+ 					"Failed Deq,Ops(Millions),Throughput(Gbps),"
+ 					"Cycles/Buf\n\n");
+ 			only_once = 1;
+ 
+-			printf("%u;%u;%u;%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";"
+-					"%.3f;%.3f;%.3f\n",
++			printf("%10u;%10u;%u;%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";"
++					"%.f3;%.f3;%.f3\n",
+ 					ctx->lcore_id,
+ 					ctx->options->test_buffer_size,
+ 					test_burst_size,
+@@ -514,7 +514,5 @@
+ 	if (ctx == NULL)
+ 		return;
+ 
+-	rte_cryptodev_stop(ctx->dev_id);
+-
+ 	cperf_throughput_test_free(ctx, ctx->options->pool_sz);
+ }
+diff -uNr dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_verify.c dpdk-17.05/app/test-crypto-perf/cperf_test_verify.c
+--- dpdk-stable-17.05.2/app/test-crypto-perf/cperf_test_verify.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-crypto-perf/cperf_test_verify.c	2017-05-10 18:11:34.000000000 -0700
+@@ -575,7 +575,5 @@
+ 	if (ctx == NULL)
+ 		return;
+ 
+-	rte_cryptodev_stop(ctx->dev_id);
+-
+ 	cperf_verify_test_free(ctx, ctx->options->pool_sz);
+ }
+diff -uNr dpdk-stable-17.05.2/app/test-pmd/cmdline_flow.c dpdk-17.05/app/test-pmd/cmdline_flow.c
+--- dpdk-stable-17.05.2/app/test-pmd/cmdline_flow.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-pmd/cmdline_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -220,6 +220,7 @@
+ 	enum index prev; /**< Index of the last token seen. */
+ 	int next_num; /**< Number of entries in next[]. */
+ 	int args_num; /**< Number of entries in args[]. */
++	uint32_t reparse:1; /**< Start over from the beginning. */
+ 	uint32_t eol:1; /**< EOL has been detected. */
+ 	uint32_t last:1; /**< No more arguments. */
+ 	uint16_t port; /**< Current port ID (for completions). */
+@@ -1573,19 +1574,6 @@
+ 	return len;
+ }
+ 
+-/** Compare a string with a partial one of a given length. */
+-static int
+-strcmp_partial(const char *full, const char *partial, size_t partial_len)
+-{
+-	int r = strncmp(full, partial, partial_len);
+-
+-	if (r)
+-		return r;
+-	if (strlen(full) <= partial_len)
+-		return 0;
+-	return full[partial_len];
+-}
+-
+ /**
+  * Parse a prefix length and generate a bit-mask.
+  *
+@@ -1668,7 +1656,7 @@
+ 	(void)ctx;
+ 	(void)buf;
+ 	(void)size;
+-	if (strcmp_partial(token->name, str, len))
++	if (strncmp(str, token->name, len))
+ 		return -1;
+ 	return len;
+ }
+@@ -1911,7 +1899,7 @@
+ 	if (ctx->curr != ACTION_RSS_QUEUE)
+ 		return -1;
+ 	i = ctx->objdata >> 16;
+-	if (!strcmp_partial("end", str, len)) {
++	if (!strncmp(str, "end", len)) {
+ 		ctx->objdata &= 0xffff;
+ 		return len;
+ 	}
+@@ -2046,7 +2034,7 @@
+ 		const struct parse_action_priv *priv;
+ 
+ 		token = &token_list[next_action[i]];
+-		if (strcmp_partial(token->name, str, len))
++		if (strncmp(token->name, str, len))
+ 			continue;
+ 		priv = token->priv;
+ 		if (!priv)
+@@ -2386,7 +2374,7 @@
+ 	if (!arg)
+ 		return -1;
+ 	for (i = 0; boolean_name[i]; ++i)
+-		if (!strcmp_partial(boolean_name[i], str, len))
++		if (!strncmp(str, boolean_name[i], len))
+ 			break;
+ 	/* Process token as integer. */
+ 	if (boolean_name[i])
+@@ -2546,6 +2534,7 @@
+ 	ctx->prev = ZERO;
+ 	ctx->next_num = 0;
+ 	ctx->args_num = 0;
++	ctx->reparse = 0;
+ 	ctx->eol = 0;
+ 	ctx->last = 0;
+ 	ctx->port = 0;
+@@ -2566,6 +2555,9 @@
+ 	int i;
+ 
+ 	(void)hdr;
++	/* Restart as requested. */
++	if (ctx->reparse)
++		cmd_flow_context_init(ctx);
+ 	token = &token_list[ctx->curr];
+ 	/* Check argument length. */
+ 	ctx->eol = 0;
+@@ -2641,6 +2633,8 @@
+ 	int i;
+ 
+ 	(void)hdr;
++	/* Tell cmd_flow_parse() that context must be reinitialized. */
++	ctx->reparse = 1;
+ 	/* Count number of tokens in current list. */
+ 	if (ctx->next_num)
+ 		list = ctx->next[ctx->next_num - 1];
+@@ -2674,6 +2668,8 @@
+ 	int i;
+ 
+ 	(void)hdr;
++	/* Tell cmd_flow_parse() that context must be reinitialized. */
++	ctx->reparse = 1;
+ 	/* Count number of tokens in current list. */
+ 	if (ctx->next_num)
+ 		list = ctx->next[ctx->next_num - 1];
+@@ -2708,6 +2704,8 @@
+ 	const struct token *token = &token_list[ctx->prev];
+ 
+ 	(void)hdr;
++	/* Tell cmd_flow_parse() that context must be reinitialized. */
++	ctx->reparse = 1;
+ 	if (!size)
+ 		return -1;
+ 	/* Set token type and update global help with details. */
+@@ -2733,12 +2731,12 @@
+ /** Populate the next dynamic token. */
+ static void
+ cmd_flow_tok(cmdline_parse_token_hdr_t **hdr,
+-	     cmdline_parse_token_hdr_t **hdr_inst)
++	     cmdline_parse_token_hdr_t *(*hdrs)[])
+ {
+ 	struct context *ctx = &cmd_flow_context;
+ 
+ 	/* Always reinitialize context before requesting the first token. */
+-	if (!(hdr_inst - cmd_flow.tokens))
++	if (!(hdr - *hdrs))
+ 		cmd_flow_context_init(ctx);
+ 	/* Return NULL when no more tokens are expected. */
+ 	if (!ctx->next_num && ctx->curr) {
+diff -uNr dpdk-stable-17.05.2/app/test-pmd/config.c dpdk-17.05/app/test-pmd/config.c
+--- dpdk-stable-17.05.2/app/test-pmd/config.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/app/test-pmd/config.c	2017-05-10 18:11:34.000000000 -0700
+@@ -968,8 +968,6 @@
+ 	MK_FLOW_ITEM(TCP, sizeof(struct rte_flow_item_tcp)),
+ 	MK_FLOW_ITEM(SCTP, sizeof(struct rte_flow_item_sctp)),
+ 	MK_FLOW_ITEM(VXLAN, sizeof(struct rte_flow_item_vxlan)),
+-	MK_FLOW_ITEM(E_TAG, sizeof(struct rte_flow_item_e_tag)),
+-	MK_FLOW_ITEM(NVGRE, sizeof(struct rte_flow_item_nvgre)),
+ 	MK_FLOW_ITEM(MPLS, sizeof(struct rte_flow_item_mpls)),
+ 	MK_FLOW_ITEM(GRE, sizeof(struct rte_flow_item_gre)),
+ };
+@@ -979,10 +977,8 @@
+ flow_item_spec_size(const struct rte_flow_item *item,
+ 		    size_t *size, size_t *pad)
+ {
+-	if (!item->spec) {
+-		*size = 0;
++	if (!item->spec)
+ 		goto empty;
+-	}
+ 	switch (item->type) {
+ 		union {
+ 			const struct rte_flow_item_raw *raw;
+@@ -994,10 +990,10 @@
+ 			spec.raw->length * sizeof(*spec.raw->pattern);
+ 		break;
+ 	default:
+-		*size = flow_item[item->type].size;
++empty:
++		*size = 0;
+ 		break;
+ 	}
+-empty:
+ 	*pad = RTE_ALIGN_CEIL(*size, sizeof(double)) - *size;
+ }
+ 
+@@ -1032,10 +1028,8 @@
+ flow_action_conf_size(const struct rte_flow_action *action,
+ 		      size_t *size, size_t *pad)
+ {
+-	if (!action->conf) {
+-		*size = 0;
++	if (!action->conf)
+ 		goto empty;
+-	}
+ 	switch (action->type) {
+ 		union {
+ 			const struct rte_flow_action_rss *rss;
+@@ -1047,10 +1041,10 @@
+ 			conf.rss->num * sizeof(*conf.rss->queue);
+ 		break;
+ 	default:
+-		*size = flow_action[action->type].size;
++empty:
++		*size = 0;
+ 		break;
+ 	}
+-empty:
+ 	*pad = RTE_ALIGN_CEIL(*size, sizeof(double)) - *size;
+ }
+ 
+diff -uNr dpdk-stable-17.05.2/doc/guides/cryptodevs/aesni_mb.rst dpdk-17.05/doc/guides/cryptodevs/aesni_mb.rst
+--- dpdk-stable-17.05.2/doc/guides/cryptodevs/aesni_mb.rst	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/doc/guides/cryptodevs/aesni_mb.rst	2017-05-10 18:11:34.000000000 -0700
+@@ -68,7 +68,7 @@
+ 
+ * Chained mbufs are not supported.
+ * Only in-place is currently supported (destination address is the same as source address).
+-
++* Only supports session-oriented API implementation (session-less APIs are not supported).
+ 
+ Installation
+ ------------
+diff -uNr dpdk-stable-17.05.2/doc/guides/cryptodevs/qat.rst dpdk-17.05/doc/guides/cryptodevs/qat.rst
+--- dpdk-stable-17.05.2/doc/guides/cryptodevs/qat.rst	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/doc/guides/cryptodevs/qat.rst	2017-05-10 18:11:34.000000000 -0700
+@@ -84,8 +84,8 @@
+ 
+ * Hash only is not supported except SNOW 3G UIA2 and KASUMI F9.
+ * Only supports the session-oriented API implementation (session-less APIs are not supported).
+-* SNOW 3G (UEA2), KASUMI (F8) and ZUC (EEA3) supported only if cipher length and offset fields are byte-multiple.
+-* SNOW 3G (UIA2), KASUMI (F9) and ZUC (EIA3) supported only if hash length and offset fields are byte-multiple.
++* SNOW 3G (UEA2) and KASUMI (F8) supported only if cipher length, cipher offset fields are byte-aligned.
++* SNOW 3G (UIA2) and KASUMI (F9) supported only if hash length, hash offset fields are byte-aligned.
+ * No BSD support as BSD QAT kernel driver not available.
+ * ZUC EEA3/EIA3 is not supported by dh895xcc devices
+ * Maximum additional authenticated data (AAD) for GCM is 240 bytes long.
+diff -uNr dpdk-stable-17.05.2/doc/guides/nics/i40e.rst dpdk-17.05/doc/guides/nics/i40e.rst
+--- dpdk-stable-17.05.2/doc/guides/nics/i40e.rst	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/doc/guides/nics/i40e.rst	2017-05-10 18:11:34.000000000 -0700
+@@ -404,6 +404,16 @@
+ is to say, user should keep ``CONFIG_RTE_LIBRTE_I40E_16BYTE_RX_DESC=n`` in
+ config file.
+ 
++Link down with i40e kernel driver after DPDK application exit
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++After DPDK application quit, and the device is bound back to Linux i40e
++kernel driver, the link cannot be up after ``ifconfig <dev> up``.
++To work around this issue, ``ethtool -s <dev> autoneg on`` should be
++set first and then the link can be brought up through ``ifconfig <dev> up``.
++
++NOTE: requires Linux kernel i40e driver version >= 1.4.X
++
+ Receive packets with Ethertype 0x88A8
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+diff -uNr dpdk-stable-17.05.2/doc/guides/nics/mlx5.rst dpdk-17.05/doc/guides/nics/mlx5.rst
+--- dpdk-stable-17.05.2/doc/guides/nics/mlx5.rst	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/doc/guides/nics/mlx5.rst	2017-05-10 18:11:34.000000000 -0700
+@@ -330,26 +330,6 @@
+ * Mellanox(R) ConnectX(R)-5 100G MCX556A-ECAT (2x100G)
+ * Mellanox(R) ConnectX(R)-5 Ex EN 100G MCX516A-CDAT (2x100G)
+ 
+-Known issues
+-------------
+-
+-* **Flow pattern without any specific vlan will match for vlan packets as well.**
+-
+-  When VLAN spec is not specified in the pattern, the matching rule will be created with VLAN as a wild card.
+-  Meaning, the flow rule::
+-
+-        flow create 0 ingress pattern eth / vlan vid is 3 / ipv4 / end ...
+-
+-  Will only match vlan packets with vid=3. and the flow rules::
+-
+-        flow create 0 ingress pattern eth / ipv4 / end ...
+-
+-  Or::
+-
+-        flow create 0 ingress pattern eth / vlan / ipv4 / end ...
+-
+-  Will match any ipv4 packet (VLAN included).
+-
+ Notes for testpmd
+ -----------------
+ 
+diff -uNr dpdk-stable-17.05.2/doc/guides/rel_notes/release_17_05.rst dpdk-17.05/doc/guides/rel_notes/release_17_05.rst
+--- dpdk-stable-17.05.2/doc/guides/rel_notes/release_17_05.rst	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/doc/guides/rel_notes/release_17_05.rst	2017-05-10 18:11:34.000000000 -0700
+@@ -827,168 +827,3 @@
+        * Host interface: PCI Express 3.0 x16
+        * Device ID: 15b3:1013
+        * Firmware version: 12.18.2000
+-
+-Fixes in 17.05 Stable Release
+------------------------------
+-
+-17.05.1
+-~~~~~~~
+-
+-* app/testpmd: fix creating E-Tag and NVGRE flow rules
+-* drivers/net: fix vfio kmod dependency
+-* examples/vhost: fix uninitialized descriptor indexes
+-* kni: fix build on RHEL 7.4
+-* kni: fix build with gcc 7.1
+-* lpm: fix index of tbl8
+-* net/af_packet: fix packet bytes counting
+-* net/af_packet: handle possible null pointer
+-* net/ark: fix buffer not null terminated
+-* net/ark: fix null pointer dereference
+-* net/ark: fix return code not checked
+-* net/ark: fix return value of null not checked
+-* net/bnxt: fix reporting of link status
+-* net/cxgbe: fix port statistics
+-* net/cxgbe: fix rxq default params for ports under same PF
+-* net/enic: fix build with gcc 7.1
+-* net/i40e/base: fix Tx error stats on VF
+-* net/i40e: exclude internal packet's byte count
+-* net/i40e: fix VF statistics
+-* net/igb: fix add/delete of flex filters
+-* net/igb: fix checksum valid flags
+-* net/ixgbe: fix fdir mask not be reset
+-* net/liquidio: fix MTU calculation from port configuration
+-* net/mlx5: fix build with gcc 7.1
+-* net/mlx5: fix completion buffer size
+-* net/mlx5: fix exception handling
+-* net/mlx5: fix flow application order on stop/start
+-* net/mlx5: fix redundant free of Tx buffer
+-* net/qede: fix VXLAN tunnel Tx offload flag setting
+-* net/ring: fix adding MAC addresses
+-* net/sfc: add Tx queue flush failed flag for sanity
+-* net/sfc/base: fix error code usage in common code
+-* net/sfc/base: let caller know that queue is already flushed
+-* net/tap: fix some flow collision
+-* net/virtio: zero the whole memory zone
+-* vfio: fix array bounds check
+-* vhost: fix crash on NUMA
+-* vhost: fix guest pages memory leak
+-* vhost: fix malloc size too small
+-
+-17.05.2
+-~~~~~~~
+-
+-* app/crypto-perf: fix CSV output
+-* app/crypto-perf: fix digest data for chained mbufs
+-* app/crypto-perf: fix error message
+-* app/crypto-perf: stop crypto devices after test
+-* app/testpmd: fix flow rule copy functions
+-* app/testpmd: fix token matching in flow command
+-* bus/fslmc: fix the failure loop condition
+-* cmdline: fix dynamic tokens initialization
+-* cmdline: fix dynamic tokens interface
+-* contigmem: do not zero pages during each mmap
+-* contigmem: free allocated memory on error
+-* crypto/aesni_mb: fix HMAC supported key sizes
+-* crypto/aesni_mb: fix possible crypto job leak
+-* crypto/aesni_mb: fix zero burst dequeue
+-* crypto/aesni_mb: remove assert checks
+-* crypto/armv8: fix authentication session configuration
+-* crypto/armv8: fix HMAC supported key sizes
+-* cryptodev: fix device stop function
+-* cryptodev: rename device retrieval argument
+-* crypto/dpaa2_sec: fix build with gcc 7.1
+-* crypto/dpaa2_sec: fix free usage for dpsec
+-* crypto/dpaa2_sec: fix HMAC supported key sizes
+-* crypto/dpaa2_sec: fix the return of supported API
+-* crypto/openssl: fix HMAC supported key sizes
+-* crypto/qat: fix HMAC supported key sizes
+-* crypto/qat: fix NULL authentication hang
+-* crypto/qat: fix SHA384-HMAC block size
+-* crypto/scheduler: fix slave name parsing
+-* crypto/scheduler: fix strings not null terminated
+-* doc: add missing algorithm in limitations for QAT
+-* doc: add VLAN flow limitation on mlx5 PMD
+-* doc: remove incorrect limitation on AESNI-MB PMD
+-* eal: fix config file path when checking process
+-* ethdev: add missing symbol in map
+-* ethdev: fix build with gcc 5.4.0
+-* ethdev: fix secondary process crash on unused virtio
+-* eventdev: fix memory realloc check in port config
+-* event/octeontx: fix missing enqueue SMP barrier
+-* examples/l2fwd-crypto: fix application help
+-* examples/l2fwd-crypto: fix auth info display
+-* examples/l2fwd-crypto: fix option parsing
+-* examples/l3fwd: fix IPv6 packet type parse
+-* examples/qos_sched: fix build for less lcores
+-* hash: fix lock release on add
+-* ip_frag: free mbufs on reassembly table destroy
+-* mbuf: fix debug checks for headroom and tailroom
+-* mbuf: fix doxygen comment of bulk alloc
+-* mbuf: fix VXLAN port in comment
+-* mem: do not advertise physical address when no hugepages
+-* mempool/dpaa2: fix error code for allocation failure
+-* mempool/dpaa2: fix freeing bp list
+-* metrics: fix name string termination
+-* net/ark: fix stats reset
+-* net/bnxt: check invalid L2 filter id
+-* net/bnxt: fix autoneg on 10GBase-T links
+-* net/bnxt: fix get link config
+-* net/bnxt: fix set link config
+-* net/bnxt: fix set link config
+-* net/bnxt: free filter before reusing it
+-* net/bonding: change link status check to no-wait
+-* net/bonding: fix number of bonding Tx/Rx queues
+-* net/bonding: fix when NTT flag updated
+-* net/e1000: fix LSC interrupt
+-* net/ena/base: initialize memory in the allocation macros
+-* net/ena: fix cleanup of the Tx bufs
+-* net/enic: fix crash when freeing 0 packet to mempool
+-* net/fm10k: initialize link status in device start
+-* net/i40e: fix division by 0
+-* net/i40e: fix ethertype filter for new FW
+-* net/i40e: fix incorrect PF Rx bytes
+-* net/i40e: fix link down and negotiation
+-* net/i40e: fix LSC interrupt
+-* net/i40e: fix parsing QinQ pattern
+-* net/i40e: fix PF notify when VF is not up
+-* net/i40e: fix Rx data segment buffer length
+-* net/i40e: fix VF Tx bytes
+-* net/i40e: revert fix of PF notify when VF not up
+-* net/igb: fix flex filter length
+-* net/ixgbe: fix LSC interrupt
+-* net/ixgbe: fix mask flag on flow rule creation
+-* net/ixgbe: fix mirror rule index overflow
+-* net/ixgbe: fix Rx/Tx queue interrupt for x550 devices
+-* net/mlx4: fix assertion failure on link update
+-* net/mlx4: fix flow creation before start
+-* net/mlx4: fix mbuf poisoning in debug code
+-* net/mlx4: fix probe failure report
+-* net/mlx5: fix inconsistent link status query
+-* net/mlx5: fix misplaced Rx interrupts functions
+-* net/mlx5: fix missing packet type calculation
+-* net/mlx5: fix return value in Rx interrupts code
+-* net/mlx5: fix Rx interrupts management
+-* net/mlx5: fix Rx interrupts support checks
+-* net/mlx5: fix TSO segment size
+-* net/qede: fix chip details print
+-* net/sfc: request MAC stats upload immediately on port start
+-* net/virtio: fix MAC address read
+-* net/virtio: fix Rx interrupt setup
+-* net/virtio-user: fix crash when detaching device
+-* net/vmxnet3: fix filtering on promiscuous disabling
+-* net/vmxnet3: fix receive queue memory leak
+-* Revert "ip_frag: free mbufs on reassembly table destroy"
+-* Revert "net/i40e: revert fix of PF notify when VF not up"
+-* ring: fix return value for dequeue
+-* ring: use aligned memzone allocation
+-* test/bonding: fix device name
+-* test/bonding: fix memory corruptions
+-* test/bonding: fix mode 4 names
+-* test/bonding: fix namespace of the RSS tests
+-* test/bonding: fix parameters of a balance Tx
+-* test/crypto: fix overflow
+-* test/crypto: fix wrong AAD setting
+-* vhost: fix checking of device features
+-* vhost: fix IP checksum
+-* vhost: fix MTU device feature check
+-* vhost: fix TCP checksum
+diff -uNr dpdk-stable-17.05.2/drivers/bus/fslmc/portal/dpaa2_hw_dpio.c dpdk-17.05/drivers/bus/fslmc/portal/dpaa2_hw_dpio.c
+--- dpdk-stable-17.05.2/drivers/bus/fslmc/portal/dpaa2_hw_dpio.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/bus/fslmc/portal/dpaa2_hw_dpio.c	2017-05-10 18:11:34.000000000 -0700
+@@ -437,7 +437,8 @@
+ 	}
+ 	return 0;
+ fail:
+-	while (--i >= 0)
++	i -= 1;
++	while (i >= 0)
+ 		rte_free(q_storage->dq_storage[i]);
+ 
+ 	return -1;
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/aesni_mb/rte_aesni_mb_pmd.c dpdk-17.05/drivers/crypto/aesni_mb/rte_aesni_mb_pmd.c
+--- dpdk-stable-17.05.2/drivers/crypto/aesni_mb/rte_aesni_mb_pmd.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/aesni_mb/rte_aesni_mb_pmd.c	2017-05-10 18:11:34.000000000 -0700
+@@ -494,6 +494,8 @@
+ verify_digest(JOB_AES_HMAC *job, struct rte_crypto_op *op) {
+ 	struct rte_mbuf *m_dst = (struct rte_mbuf *)job->user_data2;
+ 
++	RTE_ASSERT(m_dst == NULL);
++
+ 	/* Verify digest if required */
+ 	if (memcmp(job->auth_tag_output, op->sym->auth.digest.data,
+ 			job->auth_tag_output_len_in_bytes) != 0)
+@@ -520,6 +522,8 @@
+ 
+ 	struct aesni_mb_session *sess;
+ 
++	RTE_ASSERT(op == NULL);
++
+ 	if (unlikely(op->status == RTE_CRYPTO_OP_STATUS_ENQUEUED)) {
+ 		switch (job->status) {
+ 		case STS_COMPLETED:
+@@ -565,7 +569,7 @@
+ 	struct rte_crypto_op *op = NULL;
+ 	unsigned processed_jobs = 0;
+ 
+-	while (job != NULL) {
++	while (job != NULL && processed_jobs < nb_ops) {
+ 		op = post_process_mb_job(qp, job);
+ 
+ 		if (op) {
+@@ -575,8 +579,6 @@
+ 			qp->stats.dequeue_err_count++;
+ 			break;
+ 		}
+-		if (processed_jobs == nb_ops)
+-			break;
+ 
+ 		job = (*qp->op_fns->job.get_completed_job)(&qp->mb_mgr);
+ 	}
+@@ -622,9 +624,6 @@
+ 
+ 	int retval, processed_jobs = 0;
+ 
+-	if (unlikely(nb_ops == 0))
+-		return 0;
+-
+ 	do {
+ 		/* Get next operation to process from ingress queue */
+ 		retval = rte_ring_dequeue(qp->ingress_queue, (void **)&op);
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/aesni_mb/rte_aesni_mb_pmd_ops.c dpdk-17.05/drivers/crypto/aesni_mb/rte_aesni_mb_pmd_ops.c
+--- dpdk-stable-17.05.2/drivers/crypto/aesni_mb/rte_aesni_mb_pmd_ops.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/aesni_mb/rte_aesni_mb_pmd_ops.c	2017-05-10 18:11:34.000000000 -0700
+@@ -48,9 +48,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_MD5_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 12,
+@@ -69,9 +69,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA1_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 12,
+@@ -90,9 +90,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA224_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 14,
+@@ -111,9 +111,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA256_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 16,
+@@ -132,9 +132,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA384_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 24,
+@@ -153,9 +153,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA512_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 32,
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd.c dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd.c
+--- dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd.c	2017-05-10 18:11:34.000000000 -0700
+@@ -288,14 +288,27 @@
+ 		 * Generate authentication key, i_key_pad and o_key_pad.
+ 		 */
+ 		/* Zero memory under key */
+-		memset(sess->auth.hmac.key, 0, SHA1_BLOCK_SIZE);
++		memset(sess->auth.hmac.key, 0, SHA1_AUTH_KEY_LENGTH);
+ 
+-		/*
+-		 * Now copy the given authentication key to the session
+-		 * key.
+-		 */
+-		rte_memcpy(sess->auth.hmac.key, xform->auth.key.data,
+-						xform->auth.key.length);
++		if (xform->auth.key.length > SHA1_AUTH_KEY_LENGTH) {
++			/*
++			 * In case the key is longer than 160 bits
++			 * the algorithm will use SHA1(key) instead.
++			 */
++			error = sha1_block(NULL, xform->auth.key.data,
++				sess->auth.hmac.key, xform->auth.key.length);
++			if (error != 0)
++				return -1;
++		} else {
++			/*
++			 * Now copy the given authentication key to the session
++			 * key assuming that the session key is zeroed there is
++			 * no need for additional zero padding if the key is
++			 * shorter than SHA1_AUTH_KEY_LENGTH.
++			 */
++			rte_memcpy(sess->auth.hmac.key, xform->auth.key.data,
++							xform->auth.key.length);
++		}
+ 
+ 		/* Prepare HMAC padding: key|pattern */
+ 		auth_hmac_pad_prepare(sess, xform);
+@@ -321,14 +334,27 @@
+ 		 * Generate authentication key, i_key_pad and o_key_pad.
+ 		 */
+ 		/* Zero memory under key */
+-		memset(sess->auth.hmac.key, 0, SHA256_BLOCK_SIZE);
++		memset(sess->auth.hmac.key, 0, SHA256_AUTH_KEY_LENGTH);
+ 
+-		/*
+-		 * Now copy the given authentication key to the session
+-		 * key.
+-		 */
+-		rte_memcpy(sess->auth.hmac.key, xform->auth.key.data,
+-						xform->auth.key.length);
++		if (xform->auth.key.length > SHA256_AUTH_KEY_LENGTH) {
++			/*
++			 * In case the key is longer than 256 bits
++			 * the algorithm will use SHA256(key) instead.
++			 */
++			error = sha256_block(NULL, xform->auth.key.data,
++				sess->auth.hmac.key, xform->auth.key.length);
++			if (error != 0)
++				return -1;
++		} else {
++			/*
++			 * Now copy the given authentication key to the session
++			 * key assuming that the session key is zeroed there is
++			 * no need for additional zero padding if the key is
++			 * shorter than SHA256_AUTH_KEY_LENGTH.
++			 */
++			rte_memcpy(sess->auth.hmac.key, xform->auth.key.data,
++							xform->auth.key.length);
++		}
+ 
+ 		/* Prepare HMAC padding: key|pattern */
+ 		auth_hmac_pad_prepare(sess, xform);
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd_ops.c dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd_ops.c
+--- dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd_ops.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd_ops.c	2017-05-10 18:11:34.000000000 -0700
+@@ -50,9 +50,9 @@
+ 					.algo = RTE_CRYPTO_AUTH_SHA1_HMAC,
+ 					.block_size = 64,
+ 					.key_size = {
+-						.min = 1,
+-						.max = 64,
+-						.increment = 1
++						.min = 16,
++						.max = 128,
++						.increment = 0
+ 					},
+ 					.digest_size = {
+ 						.min = 20,
+@@ -71,9 +71,9 @@
+ 					.algo = RTE_CRYPTO_AUTH_SHA256_HMAC,
+ 					.block_size = 64,
+ 					.key_size = {
+-						.min = 1,
+-						.max = 64,
+-						.increment = 1
++						.min = 16,
++						.max = 128,
++						.increment = 0
+ 					},
+ 					.digest_size = {
+ 						.min = 32,
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd_private.h dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd_private.h
+--- dpdk-stable-17.05.2/drivers/crypto/armv8/rte_armv8_pmd_private.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/armv8/rte_armv8_pmd_private.h	2017-05-10 18:11:34.000000000 -0700
+@@ -192,8 +192,8 @@
+ 				uint8_t o_key_pad[SHA_BLOCK_MAX]
+ 							__rte_cache_aligned;
+ 				/**< outer pad (max supported block length) */
+-				uint8_t key[SHA_BLOCK_MAX];
+-				/**< HMAC key (max supported block length)*/
++				uint8_t key[SHA_AUTH_KEY_MAX];
++				/**< HMAC key (max supported length)*/
+ 			} hmac;
+ 		};
+ 	} auth;
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/Makefile dpdk-17.05/drivers/crypto/dpaa2_sec/Makefile
+--- dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/Makefile	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/dpaa2_sec/Makefile	2017-05-10 18:11:34.000000000 -0700
+@@ -46,10 +46,6 @@
+ endif
+ CFLAGS += -D _GNU_SOURCE
+ 
+-ifeq ($(shell test $(GCC_VERSION) -gt 70 && echo 1), 1)
+-CFLAGS += -Wno-implicit-fallthrough
+-endif
+-
+ CFLAGS += -I$(RTE_SDK)/drivers/crypto/dpaa2_sec/
+ CFLAGS += -I$(RTE_SDK)/drivers/crypto/dpaa2_sec/mc
+ CFLAGS += -I$(RTE_SDK)/drivers/bus/fslmc/
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/dpaa2_sec_dpseci.c dpdk-17.05/drivers/crypto/dpaa2_sec/dpaa2_sec_dpseci.c
+--- dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/dpaa2_sec_dpseci.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/dpaa2_sec/dpaa2_sec_dpseci.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1263,7 +1263,7 @@
+ {
+ 	PMD_INIT_FUNC_TRACE();
+ 
+-	return 0;
++	return -ENOTSUP;
+ }
+ 
+ static int
+@@ -1366,7 +1366,7 @@
+ 
+ 	/*Free the allocated memory for ethernet private data and dpseci*/
+ 	priv->hw = NULL;
+-	rte_free(dpseci);
++	free(dpseci);
+ 
+ 	return 0;
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/dpaa2_sec_priv.h dpdk-17.05/drivers/crypto/dpaa2_sec/dpaa2_sec_priv.h
+--- dpdk-stable-17.05.2/drivers/crypto/dpaa2_sec/dpaa2_sec_priv.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/dpaa2_sec/dpaa2_sec_priv.h	2017-05-10 18:11:34.000000000 -0700
+@@ -204,9 +204,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_MD5_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 16,
+@@ -225,9 +225,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA1_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 20,
+@@ -246,9 +246,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA224_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 28,
+@@ -267,9 +267,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA256_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 						.min = 32,
+@@ -288,9 +288,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA384_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 48,
+@@ -309,9 +309,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA512_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 64,
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/openssl/rte_openssl_pmd_ops.c dpdk-17.05/drivers/crypto/openssl/rte_openssl_pmd_ops.c
+--- dpdk-stable-17.05.2/drivers/crypto/openssl/rte_openssl_pmd_ops.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/openssl/rte_openssl_pmd_ops.c	2017-05-10 18:11:34.000000000 -0700
+@@ -48,9 +48,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_MD5_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 16,
+@@ -90,9 +90,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA1_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 20,
+@@ -132,9 +132,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA224_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 28,
+@@ -174,9 +174,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA256_HMAC,
+ 				.block_size = 64,
+ 				.key_size = {
+-					.min = 1,
++					.min = 64,
+ 					.max = 64,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 32,
+@@ -216,9 +216,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA384_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 48,
+@@ -258,9 +258,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA512_HMAC,
+ 				.block_size = 128,
+ 				.key_size = {
+-					.min = 1,
++					.min = 128,
+ 					.max = 128,
+-					.increment = 1
++					.increment = 0
+ 				},
+ 				.digest_size = {
+ 					.min = 64,
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/qat/qat_adf/qat_algs_build_desc.c dpdk-17.05/drivers/crypto/qat/qat_adf/qat_algs_build_desc.c
+--- dpdk-stable-17.05.2/drivers/crypto/qat/qat_adf/qat_algs_build_desc.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/qat/qat_adf/qat_algs_build_desc.c	2017-05-10 18:11:34.000000000 -0700
+@@ -121,9 +121,6 @@
+ 	case ICP_QAT_HW_AUTH_ALGO_KASUMI_F9:
+ 		return QAT_HW_ROUND_UP(ICP_QAT_HW_KASUMI_F9_STATE1_SZ,
+ 						QAT_HW_DEFAULT_ALIGNMENT);
+-	case ICP_QAT_HW_AUTH_ALGO_NULL:
+-		return QAT_HW_ROUND_UP(ICP_QAT_HW_NULL_STATE1_SZ,
+-						QAT_HW_DEFAULT_ALIGNMENT);
+ 	case ICP_QAT_HW_AUTH_ALGO_DELIMITER:
+ 		/* return maximum state1 size in this case */
+ 		return QAT_HW_ROUND_UP(ICP_QAT_HW_SHA512_STATE1_SZ,
+@@ -871,9 +868,6 @@
+ 		state2_size = ICP_QAT_HW_MD5_STATE2_SZ;
+ 		break;
+ 	case ICP_QAT_HW_AUTH_ALGO_NULL:
+-		state1_size = qat_hash_get_state1_size(
+-				ICP_QAT_HW_AUTH_ALGO_NULL);
+-		state2_size = ICP_QAT_HW_NULL_STATE2_SZ;
+ 		break;
+ 	case ICP_QAT_HW_AUTH_ALGO_KASUMI_F9:
+ 		state1_size = qat_hash_get_state1_size(
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/qat/qat_crypto_capabilities.h dpdk-17.05/drivers/crypto/qat/qat_crypto_capabilities.h
+--- dpdk-stable-17.05.2/drivers/crypto/qat/qat_crypto_capabilities.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/qat/qat_crypto_capabilities.h	2017-05-10 18:11:34.000000000 -0700
+@@ -43,9 +43,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA1_HMAC,	\
+ 				.block_size = 64,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 64,			\
+ 					.max = 64,			\
+-					.increment = 1			\
++					.increment = 0			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 20,			\
+@@ -64,9 +64,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA224_HMAC,	\
+ 				.block_size = 64,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 64,			\
+ 					.max = 64,			\
+-					.increment = 1			\
++					.increment = 0			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 28,			\
+@@ -85,9 +85,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA256_HMAC,	\
+ 				.block_size = 64,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 64,			\
+ 					.max = 64,			\
+-					.increment = 1			\
++					.increment = 0			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 32,			\
+@@ -104,11 +104,11 @@
+ 			.xform_type = RTE_CRYPTO_SYM_XFORM_AUTH,	\
+ 			{.auth = {					\
+ 				.algo = RTE_CRYPTO_AUTH_SHA384_HMAC,	\
+-				.block_size = 128,			\
++				.block_size = 64,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 128,			\
+ 					.max = 128,			\
+-					.increment = 1			\
++					.increment = 0			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 48,			\
+@@ -127,9 +127,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_SHA512_HMAC,	\
+ 				.block_size = 128,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 128,			\
+ 					.max = 128,			\
+-					.increment = 1			\
++					.increment = 0			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 64,			\
+@@ -148,9 +148,9 @@
+ 				.algo = RTE_CRYPTO_AUTH_MD5_HMAC,	\
+ 				.block_size = 64,			\
+ 				.key_size = {				\
+-					.min = 1,			\
++					.min = 8,			\
+ 					.max = 64,			\
+-					.increment = 1			\
++					.increment = 8			\
+ 				},					\
+ 				.digest_size = {			\
+ 					.min = 16,			\
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/scheduler/rte_cryptodev_scheduler.c dpdk-17.05/drivers/crypto/scheduler/rte_cryptodev_scheduler.c
+--- dpdk-stable-17.05.2/drivers/crypto/scheduler/rte_cryptodev_scheduler.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/scheduler/rte_cryptodev_scheduler.c	2017-05-10 18:11:34.000000000 -0700
+@@ -467,22 +467,8 @@
+ 
+ 	sched_ctx = dev->data->dev_private;
+ 
+-	if (strlen(scheduler->name) > RTE_CRYPTODEV_NAME_MAX_LEN - 1) {
+-		CS_LOG_ERR("Invalid name %s, should be less than "
+-				"%u bytes.\n", scheduler->name,
+-				RTE_CRYPTODEV_NAME_MAX_LEN);
+-		return -EINVAL;
+-	}
+ 	strncpy(sched_ctx->name, scheduler->name,
+ 			RTE_CRYPTODEV_SCHEDULER_NAME_MAX_LEN);
+-
+-	if (strlen(scheduler->description) >
+-			RTE_CRYPTODEV_SCHEDULER_DESC_MAX_LEN - 1) {
+-		CS_LOG_ERR("Invalid description %s, should be less than "
+-				"%u bytes.\n", scheduler->description,
+-				RTE_CRYPTODEV_SCHEDULER_DESC_MAX_LEN - 1);
+-		return -EINVAL;
+-	}
+ 	strncpy(sched_ctx->description, scheduler->description,
+ 			RTE_CRYPTODEV_SCHEDULER_DESC_MAX_LEN);
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/scheduler/rte_cryptodev_scheduler.h dpdk-17.05/drivers/crypto/scheduler/rte_cryptodev_scheduler.h
+--- dpdk-stable-17.05.2/drivers/crypto/scheduler/rte_cryptodev_scheduler.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/scheduler/rte_cryptodev_scheduler.h	2017-05-10 18:11:34.000000000 -0700
+@@ -116,7 +116,6 @@
+  *   - 0 if the scheduler is successfully loaded
+  *   - -ENOTSUP if the operation is not supported.
+  *   - -EBUSY if device is started.
+- *   - -EINVAL if input values are invalid.
+  */
+ int
+ rte_cryptodev_scheduler_load_user_scheduler(uint8_t scheduler_id,
+diff -uNr dpdk-stable-17.05.2/drivers/crypto/scheduler/scheduler_pmd.c dpdk-17.05/drivers/crypto/scheduler/scheduler_pmd.c
+--- dpdk-stable-17.05.2/drivers/crypto/scheduler/scheduler_pmd.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/crypto/scheduler/scheduler_pmd.c	2017-05-10 18:11:34.000000000 -0700
+@@ -277,7 +277,7 @@
+ {
+ 	struct scheduler_init_params *param = extra_args;
+ 
+-	if (param->nb_slaves >= RTE_CRYPTODEV_SCHEDULER_MAX_NB_SLAVES) {
++	if (param->nb_slaves >= RTE_CRYPTODEV_SCHEDULER_MAX_NB_SLAVES - 1) {
+ 		CS_LOG_ERR("Too many slaves.\n");
+ 		return -ENOMEM;
+ 	}
+diff -uNr dpdk-stable-17.05.2/drivers/event/octeontx/ssovf_worker.c dpdk-17.05/drivers/event/octeontx/ssovf_worker.c
+--- dpdk-stable-17.05.2/drivers/event/octeontx/ssovf_worker.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/event/octeontx/ssovf_worker.c	2017-05-10 18:11:34.000000000 -0700
+@@ -179,7 +179,6 @@
+ 
+ 	switch (ev->op) {
+ 	case RTE_EVENT_OP_NEW:
+-		rte_smp_wmb();
+ 		ssows_new_event(ws, ev);
+ 		break;
+ 	case RTE_EVENT_OP_FORWARD:
+diff -uNr dpdk-stable-17.05.2/drivers/mempool/dpaa2/dpaa2_hw_mempool.c dpdk-17.05/drivers/mempool/dpaa2/dpaa2_hw_mempool.c
+--- dpdk-stable-17.05.2/drivers/mempool/dpaa2/dpaa2_hw_mempool.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/mempool/dpaa2/dpaa2_hw_mempool.c	2017-05-10 18:11:34.000000000 -0700
+@@ -161,7 +161,7 @@
+ 		while (temp) {
+ 			if (temp == bp) {
+ 				prev->next = temp->next;
+-				rte_free(bp);
++				free(bp);
+ 				break;
+ 			}
+ 			prev = temp;
+@@ -294,7 +294,7 @@
+ 			/* Releasing all buffers allocated */
+ 			rte_dpaa2_mbuf_release(pool, obj_table, bpid,
+ 					   bp_info->meta_data_size, n);
+-			return -ENOBUFS;
++			return ret;
+ 		}
+ 		/* assigning mbuf from the acquired objects */
+ 		for (i = 0; (i < ret) && bufs[i]; i++) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/af_packet/rte_eth_af_packet.c dpdk-17.05/drivers/net/af_packet/rte_eth_af_packet.c
+--- dpdk-stable-17.05.2/drivers/net/af_packet/rte_eth_af_packet.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/af_packet/rte_eth_af_packet.c	2017-05-10 18:11:34.000000000 -0700
+@@ -252,11 +252,8 @@
+ 	}
+ 
+ 	/* kick-off transmits */
+-	if (sendto(pkt_q->sockfd, NULL, 0, MSG_DONTWAIT, NULL, 0) == -1) {
+-		/* error sending -- no packets transmitted */
+-		num_tx = 0;
+-		num_tx_bytes = 0;
+-	}
++	if (sendto(pkt_q->sockfd, NULL, 0, MSG_DONTWAIT, NULL, 0) == -1)
++		num_tx = 0; /* error sending -- no packets transmitted */
+ 
+ 	pkt_q->framenum = framenum;
+ 	pkt_q->tx_pkts += num_tx;
+@@ -628,8 +625,6 @@
+ 		goto error_early;
+ 	}
+ 	(*internals)->if_name = strdup(pair->value);
+-	if ((*internals)->if_name == NULL)
+-		goto error_early;
+ 	(*internals)->if_index = ifr.ifr_ifindex;
+ 
+ 	if (ioctl(sockfd, SIOCGIFHWADDR, &ifr) == -1) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/ark/ark_ethdev.c dpdk-17.05/drivers/net/ark/ark_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/ark/ark_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ark/ark_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -516,7 +516,11 @@
+ 	dev->dev_ops = NULL;
+ 	dev->rx_pkt_burst = NULL;
+ 	dev->tx_pkt_burst = NULL;
+-	rte_free(dev->data->mac_addrs);
++	if (dev->data->mac_addrs)
++		rte_free(dev->data->mac_addrs);
++	if (dev->data)
++		rte_free(dev->data);
++
+ 	return 0;
+ }
+ 
+@@ -584,11 +588,7 @@
+ 		/* Delay packet generatpr start allow the hardware to be ready
+ 		 * This is only used for sanity checking with internal generator
+ 		 */
+-		if (pthread_create(&thread, NULL, delay_pg_start, ark)) {
+-			PMD_DRV_LOG(ERR, "Could not create pktgen "
+-				    "starter thread\n");
+-			return -1;
+-		}
++		pthread_create(&thread, NULL, delay_pg_start, ark);
+ 	}
+ 
+ 	if (ark->user_ext.dev_start)
+@@ -824,7 +824,7 @@
+ 		(struct ark_adapter *)dev->data->dev_private;
+ 
+ 	for (i = 0; i < dev->data->nb_tx_queues; i++)
+-		eth_tx_queue_stats_reset(dev->data->tx_queues[i]);
++		eth_tx_queue_stats_reset(dev->data->rx_queues[i]);
+ 	for (i = 0; i < dev->data->nb_rx_queues; i++)
+ 		eth_rx_queue_stats_reset(dev->data->rx_queues[i]);
+ 	if (ark->user_ext.stats_reset)
+@@ -899,12 +899,6 @@
+ 	int  size = 0;
+ 	int first = 1;
+ 
+-	if (file == NULL) {
+-		PMD_DRV_LOG(ERR, "Unable to open "
+-			    "config file %s\n", value);
+-		return -1;
+-	}
+-
+ 	while (fgets(line, sizeof(line), file)) {
+ 		size += strlen(line);
+ 		if (size >= ARK_MAX_ARG_LEN) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/ark/ark_pktchkr.c dpdk-17.05/drivers/net/ark/ark_pktchkr.c
+--- dpdk-stable-17.05.2/drivers/net/ark/ark_pktchkr.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ark/ark_pktchkr.c	2017-05-10 18:11:34.000000000 -0700
+@@ -372,7 +372,7 @@
+ 			o->v.INT = atoll(val);
+ 			break;
+ 		case OTSTRING:
+-			snprintf(o->v.STR, ARK_MAX_STR_LEN, "%s", val);
++			strncpy(o->v.STR, val, ARK_MAX_STR_LEN);
+ 			break;
+ 		}
+ 		return 1;
+diff -uNr dpdk-stable-17.05.2/drivers/net/ark/ark_pktgen.c dpdk-17.05/drivers/net/ark/ark_pktgen.c
+--- dpdk-stable-17.05.2/drivers/net/ark/ark_pktgen.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ark/ark_pktgen.c	2017-05-10 18:11:34.000000000 -0700
+@@ -354,7 +354,7 @@
+ 			o->v.INT = atoll(val);
+ 			break;
+ 		case OTSTRING:
+-			snprintf(o->v.STR, ARK_MAX_STR_LEN, "%s", val);
++			strncpy(o->v.STR, val, ARK_MAX_STR_LEN);
+ 			break;
+ 		}
+ 		return 1;
+diff -uNr dpdk-stable-17.05.2/drivers/net/bnx2x/bnx2x_ethdev.c dpdk-17.05/drivers/net/bnx2x/bnx2x_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/bnx2x/bnx2x_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/bnx2x/bnx2x_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -681,7 +681,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_bnx2x, rte_bnx2x_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_bnx2x, pci_id_bnx2x_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_bnx2x, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_bnx2x, "* igb_uio | uio_pci_generic | vfio");
+ RTE_PMD_REGISTER_PCI(net_bnx2xvf, rte_bnx2xvf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_bnx2xvf, pci_id_bnx2xvf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_bnx2xvf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_bnx2xvf, "* igb_uio | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/bnxt/bnxt_ethdev.c dpdk-17.05/drivers/net/bnxt/bnxt_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/bnxt/bnxt_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/bnxt/bnxt_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1225,4 +1225,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_bnxt, bnxt_rte_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_bnxt, bnxt_pci_id_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_bnxt, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_bnxt, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/bnxt/bnxt_hwrm.c dpdk-17.05/drivers/net/bnxt/bnxt_hwrm.c
+--- dpdk-stable-17.05.2/drivers/net/bnxt/bnxt_hwrm.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/bnxt/bnxt_hwrm.c	2017-05-10 18:11:34.000000000 -0700
+@@ -196,9 +196,6 @@
+ 	struct hwrm_cfa_l2_filter_free_input req = {.req_type = 0 };
+ 	struct hwrm_cfa_l2_filter_free_output *resp = bp->hwrm_cmd_resp_addr;
+ 
+-	if (filter->fw_l2_filter_id == UINT64_MAX)
+-		return 0;
+-
+ 	HWRM_PREP(req, CFA_L2_FILTER_FREE, -1, resp);
+ 
+ 	req.l2_filter_id = rte_cpu_to_le_64(filter->fw_l2_filter_id);
+@@ -221,9 +218,6 @@
+ 	struct hwrm_cfa_l2_filter_alloc_output *resp = bp->hwrm_cmd_resp_addr;
+ 	uint32_t enables = 0;
+ 
+-	if (filter->fw_l2_filter_id != UINT64_MAX)
+-		bnxt_hwrm_clear_filter(bp, filter);
+-
+ 	HWRM_PREP(req, CFA_L2_FILTER_ALLOC, -1, resp);
+ 
+ 	req.flags = rte_cpu_to_le_32(filter->flags);
+@@ -484,8 +478,6 @@
+ 	struct hwrm_port_phy_cfg_input req = {0};
+ 	struct hwrm_port_phy_cfg_output *resp = bp->hwrm_cmd_resp_addr;
+ 	uint32_t enables = 0;
+-	uint32_t link_speed_mask =
+-		HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_LINK_SPEED_MASK;
+ 
+ 	HWRM_PREP(req, PORT_PHY_CFG, -1, resp);
+ 
+@@ -497,20 +489,14 @@
+ 		 * any auto mode, even "none".
+ 		 */
+ 		if (!conf->link_speed) {
+-			req.auto_mode = conf->auto_mode;
+-			enables |= HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_MODE;
+-			if (conf->auto_mode ==
+-			    HWRM_PORT_PHY_CFG_INPUT_AUTO_MODE_SPEED_MASK) {
+-				req.auto_link_speed_mask =
+-					conf->auto_link_speed_mask;
+-				enables |= link_speed_mask;
+-			}
+-			if (bp->link_info.auto_link_speed) {
+-				req.auto_link_speed =
+-					bp->link_info.auto_link_speed;
+-				enables |=
++			req.auto_mode |= conf->auto_mode;
++			enables = HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_MODE;
++			req.auto_link_speed_mask = conf->auto_link_speed_mask;
++			enables |=
++			   HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_LINK_SPEED_MASK;
++			req.auto_link_speed = bp->link_info.auto_link_speed;
++			enables |=
+ 				HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_LINK_SPEED;
+-			}
+ 		}
+ 		req.auto_duplex = conf->duplex;
+ 		enables |= HWRM_PORT_PHY_CFG_INPUT_ENABLES_AUTO_DUPLEX;
+@@ -550,10 +536,13 @@
+ 	HWRM_CHECK_RESULT;
+ 
+ 	link_info->phy_link_status = resp->link;
+-	link_info->link_up =
+-		(link_info->phy_link_status ==
+-		 HWRM_PORT_PHY_QCFG_OUTPUT_LINK_LINK) ? 1 : 0;
+-	link_info->link_speed = rte_le_to_cpu_16(resp->link_speed);
++	if (link_info->phy_link_status != HWRM_PORT_PHY_QCFG_OUTPUT_LINK_NO_LINK) {
++		link_info->link_up = 1;
++		link_info->link_speed = rte_le_to_cpu_16(resp->link_speed);
++	} else {
++		link_info->link_up = 0;
++		link_info->link_speed = 0;
++	}
+ 	link_info->duplex = resp->duplex;
+ 	link_info->pause = resp->pause;
+ 	link_info->auto_pause = resp->auto_pause;
+@@ -1348,16 +1337,12 @@
+ 	return 0;
+ }
+ 
+-static uint16_t
+-bnxt_parse_eth_link_speed_mask(struct bnxt *bp, uint32_t link_speed)
++static uint16_t bnxt_parse_eth_link_speed_mask(uint32_t link_speed)
+ {
+ 	uint16_t ret = 0;
+ 
+-	if (link_speed == ETH_LINK_SPEED_AUTONEG) {
+-		if (bp->link_info.support_speeds)
+-			return bp->link_info.support_speeds;
++	if (link_speed == ETH_LINK_SPEED_AUTONEG)
+ 		link_speed = BNXT_SUPPORTED_SPEEDS;
+-	}
+ 
+ 	if (link_speed & ETH_LINK_SPEED_100M)
+ 		ret |= HWRM_PORT_PHY_CFG_INPUT_AUTO_LINK_SPEED_MASK_100MB;
+@@ -1449,16 +1434,16 @@
+ 			"Get link config failed with rc %d\n", rc);
+ 		goto exit;
+ 	}
+-	if (link_info->link_speed)
++	if (link_info->link_up)
+ 		link->link_speed =
+ 			bnxt_parse_hw_link_speed(link_info->link_speed);
+ 	else
+-		link->link_speed = ETH_SPEED_NUM_NONE;
++		link->link_speed = ETH_LINK_SPEED_10M;
+ 	link->link_duplex = bnxt_parse_hw_link_duplex(link_info->duplex);
+ 	link->link_status = link_info->link_up;
+ 	link->link_autoneg = link_info->auto_mode ==
+ 		HWRM_PORT_PHY_QCFG_OUTPUT_AUTO_MODE_NONE ?
+-		ETH_LINK_FIXED : ETH_LINK_AUTONEG;
++		ETH_LINK_SPEED_FIXED : ETH_LINK_SPEED_AUTONEG;
+ exit:
+ 	return rc;
+ }
+@@ -1491,8 +1476,7 @@
+ 		link_req.auto_mode =
+ 				HWRM_PORT_PHY_CFG_INPUT_AUTO_MODE_SPEED_MASK;
+ 		link_req.auto_link_speed_mask =
+-			bnxt_parse_eth_link_speed_mask(bp,
+-						       dev_conf->link_speeds);
++			bnxt_parse_eth_link_speed_mask(dev_conf->link_speeds);
+ 	} else {
+ 		link_req.phy_flags |= HWRM_PORT_PHY_CFG_INPUT_FLAGS_FORCE;
+ 		link_req.link_speed = speed;
+@@ -1509,6 +1493,7 @@
+ 			"Set link config failed with rc %d\n", rc);
+ 	}
+ 
++	rte_delay_ms(BNXT_LINK_WAIT_INTERVAL);
+ error:
+ 	return rc;
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/net/bonding/rte_eth_bond_8023ad.c dpdk-17.05/drivers/net/bonding/rte_eth_bond_8023ad.c
+--- dpdk-stable-17.05.2/drivers/net/bonding/rte_eth_bond_8023ad.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/bonding/rte_eth_bond_8023ad.c	2017-05-10 18:11:34.000000000 -0700
+@@ -435,7 +435,7 @@
+ 			 * In other case (was fast and now it is slow) just switch
+ 			 * timeout to slow without forcing send of LACP (because standard
+ 			 * say so)*/
+-			if (is_partner_fast)
++			if (!is_partner_fast)
+ 				SM_FLAG_SET(port, NTT);
+ 		} else
+ 			return; /* Nothing changed */
+@@ -758,7 +758,7 @@
+ 		uint16_t key;
+ 
+ 		slave_id = internals->active_slaves[i];
+-		rte_eth_link_get_nowait(slave_id, &link_info);
++		rte_eth_link_get(slave_id, &link_info);
+ 		rte_eth_macaddr_get(slave_id, &slave_addr);
+ 
+ 		if (link_info.link_status != 0) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/bonding/rte_eth_bond_pmd.c dpdk-17.05/drivers/net/bonding/rte_eth_bond_pmd.c
+--- dpdk-stable-17.05.2/drivers/net/bonding/rte_eth_bond_pmd.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/bonding/rte_eth_bond_pmd.c	2017-05-10 18:11:34.000000000 -0700
+@@ -654,7 +654,7 @@
+ {
+ 	struct rte_eth_link link_status;
+ 
+-	rte_eth_link_get_nowait(port_id, &link_status);
++	rte_eth_link_get(port_id, &link_status);
+ 	uint64_t link_bwg = link_status.link_speed * 1000000ULL / 8;
+ 	if (link_bwg == 0)
+ 		return;
+@@ -1690,8 +1690,6 @@
+ bond_ethdev_info(struct rte_eth_dev *dev, struct rte_eth_dev_info *dev_info)
+ {
+ 	struct bond_dev_private *internals = dev->data->dev_private;
+-	uint16_t max_nb_rx_queues = UINT16_MAX;
+-	uint16_t max_nb_tx_queues = UINT16_MAX;
+ 
+ 	dev_info->max_mac_addrs = 1;
+ 
+@@ -1699,29 +1697,8 @@
+ 				  ? internals->candidate_max_rx_pktlen
+ 				  : ETHER_MAX_JUMBO_FRAME_LEN;
+ 
+-	if (internals->slave_count > 0) {
+-		/* Max number of tx/rx queues that the bonded device can
+-		 * support is the minimum values of the bonded slaves, as
+-		 * all slaves must be capable of supporting the same number
+-		 * of tx/rx queues.
+-		 */
+-		struct rte_eth_dev_info slave_info;
+-		uint8_t idx;
+-
+-		for (idx = 0; idx < internals->slave_count; idx++) {
+-			rte_eth_dev_info_get(internals->slaves[idx].port_id,
+-					&slave_info);
+-
+-			if (slave_info.max_rx_queues < max_nb_rx_queues)
+-				max_nb_rx_queues = slave_info.max_rx_queues;
+-
+-			if (slave_info.max_tx_queues < max_nb_tx_queues)
+-				max_nb_tx_queues = slave_info.max_tx_queues;
+-		}
+-	}
+-
+-	dev_info->max_rx_queues = max_nb_rx_queues;
+-	dev_info->max_tx_queues = max_nb_tx_queues;
++	dev_info->max_rx_queues = (uint16_t)128;
++	dev_info->max_tx_queues = (uint16_t)512;
+ 
+ 	dev_info->min_rx_bufsize = 0;
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/net/cxgbe/base/t4_hw.c dpdk-17.05/drivers/net/cxgbe/base/t4_hw.c
+--- dpdk-stable-17.05.2/drivers/net/cxgbe/base/t4_hw.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/cxgbe/base/t4_hw.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2136,7 +2136,6 @@
+ void t4_get_port_stats(struct adapter *adap, int idx, struct port_stats *p)
+ {
+ 	u32 bgmap = t4_get_mps_bg_map(adap, idx);
+-	u32 stat_ctl = t4_read_reg(adap, A_MPS_STAT_CTL);
+ 
+ #define GET_STAT(name) \
+ 	t4_read_reg64(adap, \
+@@ -2169,15 +2168,6 @@
+ 	p->tx_ppp6             = GET_STAT(TX_PORT_PPP6);
+ 	p->tx_ppp7             = GET_STAT(TX_PORT_PPP7);
+ 
+-	if (CHELSIO_CHIP_VERSION(adap->params.chip) >= CHELSIO_T5) {
+-		if (stat_ctl & F_COUNTPAUSESTATTX) {
+-			p->tx_frames -= p->tx_pause;
+-			p->tx_octets -= p->tx_pause * 64;
+-		}
+-		if (stat_ctl & F_COUNTPAUSEMCTX)
+-			p->tx_mcast_frames -= p->tx_pause;
+-	}
+-
+ 	p->rx_octets           = GET_STAT(RX_PORT_BYTES);
+ 	p->rx_frames           = GET_STAT(RX_PORT_FRAMES);
+ 	p->rx_bcast_frames     = GET_STAT(RX_PORT_BCAST);
+@@ -2205,16 +2195,6 @@
+ 	p->rx_ppp5             = GET_STAT(RX_PORT_PPP5);
+ 	p->rx_ppp6             = GET_STAT(RX_PORT_PPP6);
+ 	p->rx_ppp7             = GET_STAT(RX_PORT_PPP7);
+-
+-	if (CHELSIO_CHIP_VERSION(adap->params.chip) >= CHELSIO_T5) {
+-		if (stat_ctl & F_COUNTPAUSESTATRX) {
+-			p->rx_frames -= p->rx_pause;
+-			p->rx_octets -= p->rx_pause * 64;
+-		}
+-		if (stat_ctl & F_COUNTPAUSEMCRX)
+-			p->rx_mcast_frames -= p->rx_pause;
+-	}
+-
+ 	p->rx_ovflow0 = (bgmap & 1) ? GET_STAT_COM(RX_BG_0_MAC_DROP_FRAME) : 0;
+ 	p->rx_ovflow1 = (bgmap & 2) ? GET_STAT_COM(RX_BG_1_MAC_DROP_FRAME) : 0;
+ 	p->rx_ovflow2 = (bgmap & 4) ? GET_STAT_COM(RX_BG_2_MAC_DROP_FRAME) : 0;
+diff -uNr dpdk-stable-17.05.2/drivers/net/cxgbe/base/t4_regs.h dpdk-17.05/drivers/net/cxgbe/base/t4_regs.h
+--- dpdk-stable-17.05.2/drivers/net/cxgbe/base/t4_regs.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/cxgbe/base/t4_regs.h	2017-05-10 18:11:34.000000000 -0700
+@@ -553,24 +553,6 @@
+ #define V_VF(x) ((x) << S_VF)
+ #define G_VF(x) (((x) >> S_VF) & M_VF)
+ 
+-#define A_MPS_STAT_CTL 0x9600
+-
+-#define S_COUNTPAUSEMCRX    5
+-#define V_COUNTPAUSEMCRX(x) ((x) << S_COUNTPAUSEMCRX)
+-#define F_COUNTPAUSEMCRX    V_COUNTPAUSEMCRX(1U)
+-
+-#define S_COUNTPAUSESTATRX    4
+-#define V_COUNTPAUSESTATRX(x) ((x) << S_COUNTPAUSESTATRX)
+-#define F_COUNTPAUSESTATRX    V_COUNTPAUSESTATRX(1U)
+-
+-#define S_COUNTPAUSEMCTX    3
+-#define V_COUNTPAUSEMCTX(x) ((x) << S_COUNTPAUSEMCTX)
+-#define F_COUNTPAUSEMCTX    V_COUNTPAUSEMCTX(1U)
+-
+-#define S_COUNTPAUSESTATTX    2
+-#define V_COUNTPAUSESTATTX(x) ((x) << S_COUNTPAUSESTATTX)
+-#define F_COUNTPAUSESTATTX    V_COUNTPAUSESTATTX(1U)
+-
+ #define A_MPS_PORT_STAT_TX_PORT_BYTES_L 0x400
+ #define A_MPS_PORT_STAT_TX_PORT_BYTES_H 0x404
+ #define A_MPS_PORT_STAT_TX_PORT_FRAMES_L 0x408
+diff -uNr dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe.h dpdk-17.05/drivers/net/cxgbe/cxgbe.h
+--- dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/cxgbe/cxgbe.h	2017-05-10 18:11:34.000000000 -0700
+@@ -1,7 +1,7 @@
+ /*-
+  *   BSD LICENSE
+  *
+- *   Copyright(c) 2014-2017 Chelsio Communications.
++ *   Copyright(c) 2014-2015 Chelsio Communications.
+  *   All rights reserved.
+  *
+  *   Redistribution and use in source and binary forms, with or without
+@@ -59,6 +59,5 @@
+ void cfg_queues(struct rte_eth_dev *eth_dev);
+ int cfg_queue_count(struct rte_eth_dev *eth_dev);
+ int setup_rss(struct port_info *pi);
+-void cxgbe_enable_rx_queues(struct port_info *pi);
+ 
+ #endif /* _CXGBE_H_ */
+diff -uNr dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe_ethdev.c dpdk-17.05/drivers/net/cxgbe/cxgbe_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/cxgbe/cxgbe_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -338,8 +338,6 @@
+ 			goto out;
+ 	}
+ 
+-	cxgbe_enable_rx_queues(pi);
+-
+ 	err = setup_rss(pi);
+ 	if (err)
+ 		goto out;
+@@ -659,6 +657,8 @@
+ 	cxgbe_stats_get(pi, &ps);
+ 
+ 	/* RX Stats */
++	eth_stats->ipackets = ps.rx_frames;
++	eth_stats->ibytes   = ps.rx_octets;
+ 	eth_stats->imissed  = ps.rx_ovflow0 + ps.rx_ovflow1 +
+ 			      ps.rx_ovflow2 + ps.rx_ovflow3 +
+ 			      ps.rx_trunc0 + ps.rx_trunc1 +
+@@ -678,8 +678,6 @@
+ 
+ 		eth_stats->q_ipackets[i] = rxq->stats.pkts;
+ 		eth_stats->q_ibytes[i] = rxq->stats.rx_bytes;
+-		eth_stats->ipackets += eth_stats->q_ipackets[i];
+-		eth_stats->ibytes += eth_stats->q_ibytes[i];
+ 	}
+ 
+ 	for (i = 0; i < pi->n_tx_qsets; i++) {
+@@ -1063,4 +1061,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_cxgbe, rte_cxgbe_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_cxgbe, cxgb4_pci_tbl);
+-RTE_PMD_REGISTER_KMOD_DEP(net_cxgbe, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_cxgbe, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe_main.c dpdk-17.05/drivers/net/cxgbe/cxgbe_main.c
+--- dpdk-stable-17.05.2/drivers/net/cxgbe/cxgbe_main.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/cxgbe/cxgbe_main.c	2017-05-10 18:11:34.000000000 -0700
+@@ -978,22 +978,33 @@
+ /*
+  * Enable NAPI scheduling and interrupt generation for all Rx queues.
+  */
+-static void enable_rx(struct adapter *adap, struct sge_rspq *q)
++static void enable_rx(struct adapter *adap)
+ {
++	struct sge *s = &adap->sge;
++	struct sge_rspq *q = &s->fw_evtq;
++	int i, j;
++
+ 	/* 0-increment GTS to start the timer and enable interrupts */
+ 	t4_write_reg(adap, MYPF_REG(A_SGE_PF_GTS),
+ 		     V_SEINTARM(q->intr_params) |
+ 		     V_INGRESSQID(q->cntxt_id));
+-}
+ 
+-void cxgbe_enable_rx_queues(struct port_info *pi)
+-{
+-	struct adapter *adap = pi->adapter;
+-	struct sge *s = &adap->sge;
+-	unsigned int i;
++	for_each_port(adap, i) {
++		const struct port_info *pi = &adap->port[i];
++		struct rte_eth_dev *eth_dev = pi->eth_dev;
++
++		for (j = 0; j < eth_dev->data->nb_rx_queues; j++) {
++			q = eth_dev->data->rx_queues[j];
+ 
+-	for (i = 0; i < pi->n_rx_qsets; i++)
+-		enable_rx(adap, &s->ethrxq[pi->first_qset + i].rspq);
++			/*
++			 * 0-increment GTS to start the timer and enable
++			 * interrupts
++			 */
++			t4_write_reg(adap, MYPF_REG(A_SGE_PF_GTS),
++				     V_SEINTARM(q->intr_params) |
++				     V_INGRESSQID(q->cntxt_id));
++		}
++	}
+ }
+ 
+ /**
+@@ -1006,7 +1017,7 @@
+  */
+ int cxgbe_up(struct adapter *adap)
+ {
+-	enable_rx(adap, &adap->sge.fw_evtq);
++	enable_rx(adap);
+ 	t4_sge_tx_monitor_start(adap);
+ 	t4_intr_enable(adap);
+ 	adap->flags |= FULL_INIT_DONE;
+diff -uNr dpdk-stable-17.05.2/drivers/net/e1000/e1000_ethdev.h dpdk-17.05/drivers/net/e1000/e1000_ethdev.h
+--- dpdk-stable-17.05.2/drivers/net/e1000/e1000_ethdev.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/e1000/e1000_ethdev.h	2017-05-10 18:11:34.000000000 -0700
+@@ -82,7 +82,7 @@
+ #define E1000_MAX_FLEX_FILTER_DWDS \
+ 	(E1000_MAX_FLEX_FILTER_LEN / sizeof(uint32_t))
+ #define E1000_FLEX_FILTERS_MASK_SIZE \
+-	(E1000_MAX_FLEX_FILTER_DWDS / 2)
++	(E1000_MAX_FLEX_FILTER_DWDS / 4)
+ #define E1000_FHFT_QUEUEING_LEN          0x0000007F
+ #define E1000_FHFT_QUEUEING_QUEUE        0x00000700
+ #define E1000_FHFT_QUEUEING_PRIO         0x00070000
+diff -uNr dpdk-stable-17.05.2/drivers/net/e1000/em_ethdev.c dpdk-17.05/drivers/net/e1000/em_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/e1000/em_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/e1000/em_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1867,4 +1867,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_e1000_em, rte_em_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_e1000_em, pci_id_em_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_e1000_em, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_e1000_em, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/e1000/igb_ethdev.c dpdk-17.05/drivers/net/e1000/igb_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/e1000/igb_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/e1000/igb_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -138,7 +138,7 @@
+ 				struct rte_eth_fc_conf *fc_conf);
+ static int  eth_igb_flow_ctrl_set(struct rte_eth_dev *dev,
+ 				struct rte_eth_fc_conf *fc_conf);
+-static int eth_igb_lsc_interrupt_setup(struct rte_eth_dev *dev, uint8_t on);
++static int eth_igb_lsc_interrupt_setup(struct rte_eth_dev *dev);
+ static int eth_igb_rxq_interrupt_setup(struct rte_eth_dev *dev);
+ static int eth_igb_interrupt_get_status(struct rte_eth_dev *dev);
+ static int eth_igb_interrupt_action(struct rte_eth_dev *dev,
+@@ -1417,9 +1417,7 @@
+ 	if (rte_intr_allow_others(intr_handle)) {
+ 		/* check if lsc interrupt is enabled */
+ 		if (dev->data->dev_conf.intr_conf.lsc != 0)
+-			eth_igb_lsc_interrupt_setup(dev, TRUE);
+-		else
+-			eth_igb_lsc_interrupt_setup(dev, FALSE);
++			eth_igb_lsc_interrupt_setup(dev);
+ 	} else {
+ 		rte_intr_callback_unregister(intr_handle,
+ 					     eth_igb_interrupt_handler,
+@@ -2718,23 +2716,18 @@
+  *
+  * @param dev
+  *  Pointer to struct rte_eth_dev.
+- * @param on
+- *  Enable or Disable
+  *
+  * @return
+  *  - On success, zero.
+  *  - On failure, a negative value.
+  */
+ static int
+-eth_igb_lsc_interrupt_setup(struct rte_eth_dev *dev, uint8_t on)
++eth_igb_lsc_interrupt_setup(struct rte_eth_dev *dev)
+ {
+ 	struct e1000_interrupt *intr =
+ 		E1000_DEV_PRIVATE_TO_INTR(dev->data->dev_private);
+ 
+-	if (on)
+-		intr->mask |= E1000_ICR_LSC;
+-	else
+-		intr->mask &= ~E1000_ICR_LSC;
++	intr->mask |= E1000_ICR_LSC;
+ 
+ 	return 0;
+ }
+@@ -3919,6 +3912,10 @@
+ 	}
+ 
+ 	wufc = E1000_READ_REG(hw, E1000_WUFC);
++	if (flex_filter->index < E1000_MAX_FHFT)
++		reg_off = E1000_FHFT(flex_filter->index);
++	else
++		reg_off = E1000_FHFT_EXT(flex_filter->index - E1000_MAX_FHFT);
+ 
+ 	if (add) {
+ 		if (eth_igb_flex_filter_lookup(&filter_info->flex_list,
+@@ -3948,11 +3945,6 @@
+ 			return -ENOSYS;
+ 		}
+ 
+-		if (flex_filter->index < E1000_MAX_FHFT)
+-			reg_off = E1000_FHFT(flex_filter->index);
+-		else
+-			reg_off = E1000_FHFT_EXT(flex_filter->index - E1000_MAX_FHFT);
+-
+ 		E1000_WRITE_REG(hw, E1000_WUFC, wufc | E1000_WUFC_FLEX_HQ |
+ 				(E1000_WUFC_FLX0 << flex_filter->index));
+ 		queueing = filter->len |
+@@ -3981,11 +3973,6 @@
+ 			return -ENOENT;
+ 		}
+ 
+-		if (it->index < E1000_MAX_FHFT)
+-			reg_off = E1000_FHFT(it->index);
+-		else
+-			reg_off = E1000_FHFT_EXT(it->index - E1000_MAX_FHFT);
+-
+ 		for (i = 0; i < E1000_FHFT_SIZE_IN_DWD; i++)
+ 			E1000_WRITE_REG(hw, reg_off + i * sizeof(uint32_t), 0);
+ 		E1000_WRITE_REG(hw, E1000_WUFC, wufc &
+@@ -5431,7 +5418,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_e1000_igb, rte_igb_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_e1000_igb, pci_id_igb_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_e1000_igb, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_e1000_igb, "* igb_uio | uio_pci_generic | vfio");
+ RTE_PMD_REGISTER_PCI(net_e1000_igb_vf, rte_igbvf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_e1000_igb_vf, pci_id_igbvf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_e1000_igb_vf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_e1000_igb_vf, "* igb_uio | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/e1000/igb_rxtx.c dpdk-17.05/drivers/net/e1000/igb_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/e1000/igb_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/e1000/igb_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2402,11 +2402,9 @@
+ 
+ 	/* Enable both L3/L4 rx checksum offload */
+ 	if (dev->data->dev_conf.rxmode.hw_ip_checksum)
+-		rxcsum |= (E1000_RXCSUM_IPOFL | E1000_RXCSUM_TUOFL |
+-				E1000_RXCSUM_CRCOFL);
++		rxcsum |= (E1000_RXCSUM_IPOFL  | E1000_RXCSUM_TUOFL);
+ 	else
+-		rxcsum &= ~(E1000_RXCSUM_IPOFL | E1000_RXCSUM_TUOFL |
+-				E1000_RXCSUM_CRCOFL);
++		rxcsum &= ~(E1000_RXCSUM_IPOFL | E1000_RXCSUM_TUOFL);
+ 	E1000_WRITE_REG(hw, E1000_RXCSUM, rxcsum);
+ 
+ 	/* Setup the Receive Control Register. */
+diff -uNr dpdk-stable-17.05.2/drivers/net/ena/base/ena_plat_dpdk.h dpdk-17.05/drivers/net/ena/base/ena_plat_dpdk.h
+--- dpdk-stable-17.05.2/drivers/net/ena/base/ena_plat_dpdk.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ena/base/ena_plat_dpdk.h	2017-05-10 18:11:34.000000000 -0700
+@@ -207,7 +207,6 @@
+ 		snprintf(z_name, sizeof(z_name),			\
+ 				"ena_alloc_%d", ena_alloc_cnt++);	\
+ 		mz = rte_memzone_reserve(z_name, size, node, 0); \
+-		memset(mz->addr, 0, size);				\
+ 		virt = mz->addr;					\
+ 		phys = mz->phys_addr;					\
+ 	} while (0)
+@@ -220,7 +219,6 @@
+ 		snprintf(z_name, sizeof(z_name),			\
+ 				"ena_alloc_%d", ena_alloc_cnt++);	\
+ 		mz = rte_memzone_reserve(z_name, size, node, 0); \
+-		memset(mz->addr, 0, size);				\
+ 		virt = mz->addr;					\
+ 	} while (0)
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/net/ena/ena_ethdev.c dpdk-17.05/drivers/net/ena/ena_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/ena/ena_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ena/ena_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -689,10 +689,11 @@
+ 
+ static void ena_tx_queue_release_bufs(struct ena_ring *ring)
+ {
+-	unsigned int i;
++	unsigned int ring_mask = ring->ring_size - 1;
+ 
+-	for (i = 0; i < ring->ring_size; ++i) {
+-		struct ena_tx_buffer *tx_buf = &ring->tx_buffer_info[i];
++	while (ring->next_to_clean != ring->next_to_use) {
++		struct ena_tx_buffer *tx_buf =
++			&ring->tx_buffer_info[ring->next_to_clean & ring_mask];
+ 
+ 		if (tx_buf->mbuf)
+ 			rte_pktmbuf_free(tx_buf->mbuf);
+@@ -1771,7 +1772,6 @@
+ 		/* Free whole mbuf chain  */
+ 		mbuf = tx_info->mbuf;
+ 		rte_pktmbuf_free(mbuf);
+-		tx_info->mbuf = NULL;
+ 
+ 		/* Put back descriptor to the ring for reuse */
+ 		tx_ring->empty_tx_reqs[next_to_clean & ring_mask] = req_id;
+@@ -1812,4 +1812,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_ena, rte_ena_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_ena, pci_id_ena_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_ena, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_ena, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/enic/base/vnic_dev.c dpdk-17.05/drivers/net/enic/base/vnic_dev.c
+--- dpdk-stable-17.05.2/drivers/net/enic/base/vnic_dev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/enic/base/vnic_dev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -645,7 +645,7 @@
+ 
+ int vnic_dev_get_mac_addr(struct vnic_dev *vdev, u8 *mac_addr)
+ {
+-	u64 a0 = 0, a1 = 0;
++	u64 a0, a1 = 0;
+ 	int wait = 1000;
+ 	int err, i;
+ 
+@@ -1021,7 +1021,7 @@
+ int vnic_dev_classifier(struct vnic_dev *vdev, u8 cmd, u16 *entry,
+ 	struct filter_v2 *data)
+ {
+-	u64 a0 = 0, a1 = 0;
++	u64 a0, a1;
+ 	int wait = 1000;
+ 	dma_addr_t tlv_pa;
+ 	int ret = -EINVAL;
+diff -uNr dpdk-stable-17.05.2/drivers/net/enic/enic_ethdev.c dpdk-17.05/drivers/net/enic/enic_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/enic/enic_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/enic/enic_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -651,4 +651,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_enic, rte_enic_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_enic, pci_id_enic_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_enic, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_enic, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/enic/enic_rxtx.c dpdk-17.05/drivers/net/enic/enic_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/enic/enic_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/enic/enic_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -491,8 +491,7 @@
+ 		tail_idx = enic_ring_incr(desc_count, tail_idx);
+ 	}
+ 
+-	if (nb_free > 0)
+-		rte_mempool_put_bulk(pool, (void **)free, nb_free);
++	rte_mempool_put_bulk(pool, (void **)free, nb_free);
+ 
+ 	wq->tail_idx = tail_idx;
+ 	wq->ring.desc_avail += nb_to_free;
+diff -uNr dpdk-stable-17.05.2/drivers/net/fm10k/fm10k_ethdev.c dpdk-17.05/drivers/net/fm10k/fm10k_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/fm10k/fm10k_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/fm10k/fm10k_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -84,7 +84,6 @@
+ static void fm10k_set_rx_function(struct rte_eth_dev *dev);
+ static void fm10k_set_tx_function(struct rte_eth_dev *dev);
+ static int fm10k_check_ftag(struct rte_devargs *devargs);
+-static int fm10k_link_update(struct rte_eth_dev *dev, int wait_to_complete);
+ 
+ struct fm10k_xstats_name_off {
+ 	char name[RTE_ETH_XSTATS_NAME_SIZE];
+@@ -1167,8 +1166,6 @@
+ 	if (!(dev->data->dev_conf.rxmode.mq_mode & ETH_MQ_RX_VMDQ_FLAG))
+ 		fm10k_vlan_filter_set(dev, hw->mac.default_vid, true);
+ 
+-	fm10k_link_update(dev, 0);
+-
+ 	return 0;
+ }
+ 
+@@ -3149,4 +3146,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_fm10k, rte_pmd_fm10k);
+ RTE_PMD_REGISTER_PCI_TABLE(net_fm10k, pci_id_fm10k_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_fm10k, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_fm10k, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/base/i40e_register.h dpdk-17.05/drivers/net/i40e/base/i40e_register.h
+--- dpdk-stable-17.05.2/drivers/net/i40e/base/i40e_register.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/base/i40e_register.h	2017-05-10 18:11:34.000000000 -0700
+@@ -2805,7 +2805,7 @@
+ #define I40E_GLV_RUPP_MAX_INDEX  383
+ #define I40E_GLV_RUPP_RUPP_SHIFT 0
+ #define I40E_GLV_RUPP_RUPP_MASK  I40E_MASK(0xFFFFFFFF, I40E_GLV_RUPP_RUPP_SHIFT)
+-#define I40E_GLV_TEPC(_VSI)      (0x00344000 + ((_VSI) * 8)) /* _i=0...383 */ /* Reset: CORER */
++#define I40E_GLV_TEPC(_VSI)      (0x00344000 + ((_VSI) * 4)) /* _i=0...383 */ /* Reset: CORER */
+ #define I40E_GLV_TEPC_MAX_INDEX  383
+ #define I40E_GLV_TEPC_TEPC_SHIFT 0
+ #define I40E_GLV_TEPC_TEPC_MASK  I40E_MASK(0xFFFFFFFF, I40E_GLV_TEPC_TEPC_SHIFT)
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev.c dpdk-17.05/drivers/net/i40e/i40e_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -679,7 +679,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_i40e, rte_i40e_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_i40e, pci_id_i40e_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_i40e, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_i40e, "* igb_uio | uio_pci_generic | vfio");
+ 
+ #ifndef I40E_GLQF_ORT
+ #define I40E_GLQF_ORT(_i)    (0x00268900 + ((_i) * 4))
+@@ -1806,15 +1806,11 @@
+ static int
+ i40e_phy_conf_link(struct i40e_hw *hw,
+ 		   uint8_t abilities,
+-		   uint8_t force_speed,
+-		   bool is_up)
++		   uint8_t force_speed)
+ {
+ 	enum i40e_status_code status;
+ 	struct i40e_aq_get_phy_abilities_resp phy_ab;
+ 	struct i40e_aq_set_phy_config phy_conf;
+-	enum i40e_aq_phy_type cnt;
+-	uint32_t phy_type_mask = 0;
+-
+ 	const uint8_t mask = I40E_AQ_PHY_FLAG_PAUSE_TX |
+ 			I40E_AQ_PHY_FLAG_PAUSE_RX |
+ 			I40E_AQ_PHY_FLAG_PAUSE_RX |
+@@ -1832,10 +1828,6 @@
+ 	if (status)
+ 		return ret;
+ 
+-	/* If link already up, no need to set up again */
+-	if (is_up && phy_ab.phy_type != 0)
+-		return I40E_SUCCESS;
+-
+ 	memset(&phy_conf, 0, sizeof(phy_conf));
+ 
+ 	/* bits 0-2 use the values from get_phy_abilities_resp */
+@@ -1846,21 +1838,13 @@
+ 	if (abilities & I40E_AQ_PHY_AN_ENABLED)
+ 		phy_conf.link_speed = advt;
+ 	else
+-		phy_conf.link_speed = is_up ? force_speed : phy_ab.link_speed;
++		phy_conf.link_speed = force_speed;
+ 
+ 	phy_conf.abilities = abilities;
+ 
+-
+-
+-	/* To enable link, phy_type mask needs to include each type */
+-	for (cnt = I40E_PHY_TYPE_SGMII; cnt < I40E_PHY_TYPE_MAX; cnt++)
+-		phy_type_mask |= 1 << cnt;
+-
+ 	/* use get_phy_abilities_resp value for the rest */
+-	phy_conf.phy_type = is_up ? cpu_to_le32(phy_type_mask) : 0;
+-	phy_conf.phy_type_ext = is_up ? (I40E_AQ_PHY_TYPE_EXT_25G_KR |
+-		I40E_AQ_PHY_TYPE_EXT_25G_CR | I40E_AQ_PHY_TYPE_EXT_25G_SR |
+-		I40E_AQ_PHY_TYPE_EXT_25G_LR) : 0;
++	phy_conf.phy_type = phy_ab.phy_type;
++	phy_conf.phy_type_ext = phy_ab.phy_type_ext;
+ 	phy_conf.fec_config = phy_ab.fec_cfg_curr_mod_ext_info;
+ 	phy_conf.eee_capability = phy_ab.eee_capability;
+ 	phy_conf.eeer = phy_ab.eeer_val;
+@@ -1892,7 +1876,13 @@
+ 		abilities |= I40E_AQ_PHY_AN_ENABLED;
+ 	abilities |= I40E_AQ_PHY_LINK_ENABLED;
+ 
+-	return i40e_phy_conf_link(hw, abilities, speed, true);
++	/* Skip changing speed on 40G interfaces, FW does not support */
++	if (I40E_PHY_TYPE_SUPPORT_40G(hw->phy.phy_types)) {
++		speed =  I40E_LINK_SPEED_UNKNOWN;
++		abilities |= I40E_AQ_PHY_AN_ENABLED;
++	}
++
++	return i40e_phy_conf_link(hw, abilities, speed);
+ }
+ 
+ static int
+@@ -2018,7 +2008,7 @@
+ 		if (dev->data->dev_conf.intr_conf.lsc != 0)
+ 			PMD_INIT_LOG(INFO,
+ 				"lsc won't enable because of no intr multiplex");
+-	} else {
++	} else if (dev->data->dev_conf.intr_conf.lsc != 0) {
+ 		ret = i40e_aq_set_phy_int_mask(hw,
+ 					       ~(I40E_AQ_EVENT_LINK_UPDOWN |
+ 					       I40E_AQ_EVENT_MODULE_QUAL_FAIL |
+@@ -2026,7 +2016,7 @@
+ 		if (ret != I40E_SUCCESS)
+ 			PMD_DRV_LOG(WARNING, "Fail to set phy mask");
+ 
+-		/* Call get_link_info aq commond to enable/disable LSE */
++		/* Call get_link_info aq commond to enable LSE */
+ 		i40e_dev_link_update(dev, 0);
+ 	}
+ 
+@@ -2235,7 +2225,7 @@
+ 	struct i40e_hw *hw = I40E_DEV_PRIVATE_TO_HW(dev->data->dev_private);
+ 
+ 	abilities = I40E_AQ_PHY_ENABLE_ATOMIC_LINK;
+-	return i40e_phy_conf_link(hw, abilities, speed, false);
++	return i40e_phy_conf_link(hw, abilities, speed);
+ }
+ 
+ int
+@@ -2339,10 +2329,6 @@
+ 	i40e_stat_update_48(hw, I40E_GLV_BPRCH(idx), I40E_GLV_BPRCL(idx),
+ 			    vsi->offset_loaded, &oes->rx_broadcast,
+ 			    &nes->rx_broadcast);
+-	/* exclude CRC bytes */
+-	nes->rx_bytes -= (nes->rx_unicast + nes->rx_multicast +
+-		nes->rx_broadcast) * ETHER_CRC_LEN;
+-
+ 	i40e_stat_update_32(hw, I40E_GLV_RDPC(idx), vsi->offset_loaded,
+ 			    &oes->rx_discards, &nes->rx_discards);
+ 	/* GLV_REPC not supported */
+@@ -2393,40 +2379,6 @@
+ 	struct i40e_hw_port_stats *ns = &pf->stats; /* new stats */
+ 	struct i40e_hw_port_stats *os = &pf->stats_offset; /* old stats */
+ 
+-	/* Get rx/tx bytes of internal transfer packets */
+-	i40e_stat_update_48(hw, I40E_GLV_GORCH(hw->port),
+-			I40E_GLV_GORCL(hw->port),
+-			pf->offset_loaded,
+-			&pf->internal_stats_offset.rx_bytes,
+-			&pf->internal_stats.rx_bytes);
+-
+-	i40e_stat_update_48(hw, I40E_GLV_GOTCH(hw->port),
+-			I40E_GLV_GOTCL(hw->port),
+-			pf->offset_loaded,
+-			&pf->internal_stats_offset.tx_bytes,
+-			&pf->internal_stats.tx_bytes);
+-	/* Get total internal rx packet count */
+-	i40e_stat_update_48(hw, I40E_GLV_UPRCH(hw->port),
+-			    I40E_GLV_UPRCL(hw->port),
+-			    pf->offset_loaded,
+-			    &pf->internal_stats_offset.rx_unicast,
+-			    &pf->internal_stats.rx_unicast);
+-	i40e_stat_update_48(hw, I40E_GLV_MPRCH(hw->port),
+-			    I40E_GLV_MPRCL(hw->port),
+-			    pf->offset_loaded,
+-			    &pf->internal_stats_offset.rx_multicast,
+-			    &pf->internal_stats.rx_multicast);
+-	i40e_stat_update_48(hw, I40E_GLV_BPRCH(hw->port),
+-			    I40E_GLV_BPRCL(hw->port),
+-			    pf->offset_loaded,
+-			    &pf->internal_stats_offset.rx_broadcast,
+-			    &pf->internal_stats.rx_broadcast);
+-
+-	/* exclude CRC size */
+-	pf->internal_stats.rx_bytes -= (pf->internal_stats.rx_unicast +
+-		pf->internal_stats.rx_multicast +
+-		pf->internal_stats.rx_broadcast) * ETHER_CRC_LEN;
+-
+ 	/* Get statistics of struct i40e_eth_stats */
+ 	i40e_stat_update_48(hw, I40E_GLPRT_GORCH(hw->port),
+ 			    I40E_GLPRT_GORCL(hw->port),
+@@ -2450,16 +2402,6 @@
+ 	ns->eth.rx_bytes -= (ns->eth.rx_unicast + ns->eth.rx_multicast +
+ 		ns->eth.rx_broadcast) * ETHER_CRC_LEN;
+ 
+-	/* Workaround: it is possible I40E_GLV_GORCH[H/L] is updated before
+-	 * I40E_GLPRT_GORCH[H/L], so there is a small window that cause negtive
+-	 * value.
+-	 */
+-	if (ns->eth.rx_bytes < pf->internal_stats.rx_bytes)
+-		ns->eth.rx_bytes = 0;
+-	/* exlude internal rx bytes */
+-	else
+-		ns->eth.rx_bytes -= pf->internal_stats.rx_bytes;
+-
+ 	i40e_stat_update_32(hw, I40E_GLPRT_RDPC(hw->port),
+ 			    pf->offset_loaded, &os->eth.rx_discards,
+ 			    &ns->eth.rx_discards);
+@@ -2487,13 +2429,6 @@
+ 			    &ns->eth.tx_broadcast);
+ 	ns->eth.tx_bytes -= (ns->eth.tx_unicast + ns->eth.tx_multicast +
+ 		ns->eth.tx_broadcast) * ETHER_CRC_LEN;
+-
+-	/* exclude internal tx bytes */
+-	if (ns->eth.tx_bytes < pf->internal_stats.tx_bytes)
+-		ns->eth.tx_bytes = 0;
+-	else
+-		ns->eth.tx_bytes -= pf->internal_stats.tx_bytes;
+-
+ 	/* GLPRT_TEPC not supported */
+ 
+ 	/* additional port specific stats */
+@@ -4329,8 +4264,6 @@
+ 	for (i = 0; i < I40E_MAX_TRAFFIC_CLASS; i++)
+ 		if (enabled_tcmap & (1 << i))
+ 			total_tc++;
+-	if (total_tc == 0)
+-		total_tc = 1;
+ 	vsi->enabled_tc = enabled_tcmap;
+ 
+ 	/* Number of queues per enabled TC */
+@@ -5263,8 +5196,6 @@
+ 	pf->offset_loaded = FALSE;
+ 	memset(&pf->stats, 0, sizeof(struct i40e_hw_port_stats));
+ 	memset(&pf->stats_offset, 0, sizeof(struct i40e_hw_port_stats));
+-	memset(&pf->internal_stats, 0, sizeof(struct i40e_eth_stats));
+-	memset(&pf->internal_stats_offset, 0, sizeof(struct i40e_eth_stats));
+ 
+ 	ret = i40e_pf_get_switch_config(pf);
+ 	if (ret != I40E_SUCCESS) {
+@@ -9195,9 +9126,8 @@
+  */
+ 
+ /* For both X710 and XL710 */
+-#define I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE_1	0x10000200
+-#define I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE_2	0x20000200
+-#define I40E_GL_SWR_PRI_JOIN_MAP_0		0x26CE00
++#define I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE 0x10000200
++#define I40E_GL_SWR_PRI_JOIN_MAP_0       0x26CE00
+ 
+ #define I40E_GL_SWR_PRI_JOIN_MAP_2_VALUE 0x011f0200
+ #define I40E_GL_SWR_PRI_JOIN_MAP_2       0x26CE08
+@@ -9249,12 +9179,8 @@
+ 				reg_table[i].val =
+ 					I40E_X722_GL_SWR_PRI_JOIN_MAP_0_VALUE;
+ 			else /* For X710/XL710/XXV710 */
+-				if (hw->aq.fw_maj_ver < 6)
+-					reg_table[i].val =
+-					     I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE_1;
+-				else
+-					reg_table[i].val =
+-					     I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE_2;
++				reg_table[i].val =
++					I40E_GL_SWR_PRI_JOIN_MAP_0_VALUE;
+ 		}
+ 
+ 		if (reg_table[i].addr == I40E_GL_SWR_PRI_JOIN_MAP_2) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev.h dpdk-17.05/drivers/net/i40e/i40e_ethdev.h
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_ethdev.h	2017-05-10 18:11:34.000000000 -0700
+@@ -639,9 +639,6 @@
+ 
+ 	struct i40e_hw_port_stats stats_offset;
+ 	struct i40e_hw_port_stats stats;
+-	/* internal packet statistics, it should be excluded from the total */
+-	struct i40e_eth_stats internal_stats_offset;
+-	struct i40e_eth_stats internal_stats;
+ 	bool offset_loaded;
+ 
+ 	struct rte_eth_dev_data *dev_data; /* Pointer to the device data */
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev_vf.c dpdk-17.05/drivers/net/i40e/i40e_ethdev_vf.c
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_ethdev_vf.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_ethdev_vf.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1569,7 +1569,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_i40e_vf, rte_i40evf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_i40e_vf, pci_id_i40evf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_i40e_vf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_i40e_vf, "* igb_uio | vfio");
+ 
+ static int
+ i40evf_dev_configure(struct rte_eth_dev *dev)
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_flow.c dpdk-17.05/drivers/net/i40e/i40e_flow.c
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_flow.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1821,10 +1821,8 @@
+ 	}
+ 
+ 	/* Get filter specification */
+-	if ((o_vlan_mask != NULL) && (o_vlan_mask->tci ==
+-			rte_cpu_to_be_16(I40E_TCI_MASK)) &&
+-			(i_vlan_mask != NULL) &&
+-			(i_vlan_mask->tci == rte_cpu_to_be_16(I40E_TCI_MASK))) {
++	if ((o_vlan_mask->tci == rte_cpu_to_be_16(I40E_TCI_MASK)) &&
++	    (i_vlan_mask->tci == rte_cpu_to_be_16(I40E_TCI_MASK))) {
+ 		filter->outer_vlan = rte_be_to_cpu_16(o_vlan_spec->tci)
+ 			& I40E_TCI_MASK;
+ 		filter->inner_vlan = rte_be_to_cpu_16(i_vlan_spec->tci)
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_pf.c dpdk-17.05/drivers/net/i40e/i40e_pf.c
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_pf.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_pf.c	2017-05-10 18:11:34.000000000 -0700
+@@ -152,22 +152,22 @@
+ 		val |= I40E_VPGEN_VFRTRIG_VFSWR_MASK;
+ 		I40E_WRITE_REG(hw, I40E_VPGEN_VFRTRIG(vf_id), val);
+ 		I40E_WRITE_FLUSH(hw);
++	}
+ 
+ #define VFRESET_MAX_WAIT_CNT 100
+-		/* Wait until VF reset is done */
+-		for (i = 0; i < VFRESET_MAX_WAIT_CNT; i++) {
+-			rte_delay_us(10);
+-			val = I40E_READ_REG(hw, I40E_VPGEN_VFRSTAT(vf_id));
+-			if (val & I40E_VPGEN_VFRSTAT_VFRD_MASK)
+-				break;
+-		}
++	/* Wait until VF reset is done */
++	for (i = 0; i < VFRESET_MAX_WAIT_CNT; i++) {
++		rte_delay_us(10);
++		val = I40E_READ_REG(hw, I40E_VPGEN_VFRSTAT(vf_id));
++		if (val & I40E_VPGEN_VFRSTAT_VFRD_MASK)
++			break;
++	}
+ 
+-		if (i >= VFRESET_MAX_WAIT_CNT) {
+-			PMD_DRV_LOG(ERR, "VF reset timeout");
+-			return -ETIMEDOUT;
+-		}
+-		vf->state = I40E_VF_ACTIVE;
++	if (i >= VFRESET_MAX_WAIT_CNT) {
++		PMD_DRV_LOG(ERR, "VF reset timeout");
++		return -ETIMEDOUT;
+ 	}
++
+ 	/* This is not first time to do reset, do cleanup job first */
+ 	if (vf->vsi) {
+ 		/* Disable queues */
+@@ -262,10 +262,7 @@
+ {
+ 	struct i40e_hw *hw = I40E_PF_TO_HW(vf->pf);
+ 	uint16_t abs_vf_id = hw->func_caps.vf_base_id + vf->vf_idx;
+-	int ret = I40E_ERR_ADMIN_QUEUE_ERROR;
+-
+-	if (vf->state == I40E_VF_INACTIVE)
+-		return ret;
++	int ret;
+ 
+ 	ret = i40e_aq_send_msg_to_vf(hw, abs_vf_id, opcode, retval,
+ 						msg, msglen, NULL);
+diff -uNr dpdk-stable-17.05.2/drivers/net/i40e/i40e_rxtx.c dpdk-17.05/drivers/net/i40e/i40e_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/i40e/i40e_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/i40e/i40e_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2474,7 +2474,7 @@
+ 	case I40E_FLAG_HEADER_SPLIT_DISABLED:
+ 	default:
+ 		rxq->rx_hdr_len = 0;
+-		rxq->rx_buf_len = RTE_ALIGN_FLOOR(buf_size,
++		rxq->rx_buf_len = RTE_ALIGN(buf_size,
+ 			(1 << I40E_RXQ_CTX_DBUFF_SHIFT));
+ 		rxq->hs_mode = i40e_header_split_none;
+ 		break;
+diff -uNr dpdk-stable-17.05.2/drivers/net/ixgbe/ixgbe_ethdev.c dpdk-17.05/drivers/net/ixgbe/ixgbe_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/ixgbe/ixgbe_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ixgbe/ixgbe_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -240,7 +240,7 @@
+ 			struct rte_eth_rss_reta_entry64 *reta_conf,
+ 			uint16_t reta_size);
+ static void ixgbe_dev_link_status_print(struct rte_eth_dev *dev);
+-static int ixgbe_dev_lsc_interrupt_setup(struct rte_eth_dev *dev, uint8_t on);
++static int ixgbe_dev_lsc_interrupt_setup(struct rte_eth_dev *dev);
+ static int ixgbe_dev_macsec_interrupt_setup(struct rte_eth_dev *dev);
+ static int ixgbe_dev_rxq_interrupt_setup(struct rte_eth_dev *dev);
+ static int ixgbe_dev_interrupt_get_status(struct rte_eth_dev *dev);
+@@ -2672,9 +2672,7 @@
+ 	if (rte_intr_allow_others(intr_handle)) {
+ 		/* check if lsc interrupt is enabled */
+ 		if (dev->data->dev_conf.intr_conf.lsc != 0)
+-			ixgbe_dev_lsc_interrupt_setup(dev, TRUE);
+-		else
+-			ixgbe_dev_lsc_interrupt_setup(dev, FALSE);
++			ixgbe_dev_lsc_interrupt_setup(dev);
+ 		ixgbe_dev_macsec_interrupt_setup(dev);
+ 	} else {
+ 		rte_intr_callback_unregister(intr_handle,
+@@ -3918,24 +3916,19 @@
+  *
+  * @param dev
+  *  Pointer to struct rte_eth_dev.
+- * @param on
+- *  Enable or Disable.
+  *
+  * @return
+  *  - On success, zero.
+  *  - On failure, a negative value.
+  */
+ static int
+-ixgbe_dev_lsc_interrupt_setup(struct rte_eth_dev *dev, uint8_t on)
++ixgbe_dev_lsc_interrupt_setup(struct rte_eth_dev *dev)
+ {
+ 	struct ixgbe_interrupt *intr =
+ 		IXGBE_DEV_PRIVATE_TO_INTR(dev->data->dev_private);
+ 
+ 	ixgbe_dev_link_status_print(dev);
+-	if (on)
+-		intr->mask |= IXGBE_EICR_LSC;
+-	else
+-		intr->mask &= ~IXGBE_EICR_LSC;
++	intr->mask |= IXGBE_EICR_LSC;
+ 
+ 	return 0;
+ }
+@@ -5323,9 +5316,6 @@
+ 	if (ixgbe_vt_check(hw) < 0)
+ 		return -ENOTSUP;
+ 
+-	if (rule_id >= IXGBE_MAX_MIRROR_RULES)
+-		return -EINVAL;
+-
+ 	memset(&mr_info->mr_conf[rule_id], 0,
+ 	       sizeof(struct rte_eth_mirror_conf));
+ 
+@@ -5483,8 +5473,7 @@
+ 		tmp |= (msix_vector << (8 * (queue & 0x3)));
+ 		IXGBE_WRITE_REG(hw, IXGBE_IVAR(idx), tmp);
+ 	} else if ((hw->mac.type == ixgbe_mac_82599EB) ||
+-			(hw->mac.type == ixgbe_mac_X540) ||
+-			(hw->mac.type == ixgbe_mac_X550)) {
++			(hw->mac.type == ixgbe_mac_X540)) {
+ 		if (direction == -1) {
+ 			/* other causes */
+ 			idx = ((queue & 1) * 8);
+@@ -5592,7 +5581,6 @@
+ 		break;
+ 	case ixgbe_mac_82599EB:
+ 	case ixgbe_mac_X540:
+-	case ixgbe_mac_X550:
+ 		ixgbe_set_ivar_map(hw, -1, 1, IXGBE_MISC_VEC_ID);
+ 		break;
+ 	default:
+@@ -8160,7 +8148,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_ixgbe, rte_ixgbe_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_ixgbe, pci_id_ixgbe_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_ixgbe, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_ixgbe, "* igb_uio | uio_pci_generic | vfio");
+ RTE_PMD_REGISTER_PCI(net_ixgbe_vf, rte_ixgbevf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_ixgbe_vf, pci_id_ixgbevf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_ixgbe_vf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_ixgbe_vf, "* igb_uio | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/ixgbe/ixgbe_flow.c dpdk-17.05/drivers/net/ixgbe/ixgbe_flow.c
+--- dpdk-stable-17.05.2/drivers/net/ixgbe/ixgbe_flow.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ixgbe/ixgbe_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2414,7 +2414,6 @@
+ 	struct ixgbe_eth_l2_tunnel_conf_ele *l2_tn_filter_ptr;
+ 	struct ixgbe_fdir_rule_ele *fdir_rule_ptr;
+ 	struct ixgbe_flow_mem *ixgbe_flow_mem_ptr;
+-	uint8_t first_mask = FALSE;
+ 
+ 	flow = rte_zmalloc("ixgbe_rte_flow", sizeof(struct rte_flow), 0);
+ 	if (!flow) {
+@@ -2511,7 +2510,6 @@
+ 					goto out;
+ 
+ 				fdir_info->mask_added = TRUE;
+-				first_mask = TRUE;
+ 			} else {
+ 				/**
+ 				 * Only support one global mask,
+@@ -2542,15 +2540,8 @@
+ 				return flow;
+ 			}
+ 
+-			if (ret) {
+-				/**
+-				 * clean the mask_added flag if fail to
+-				 * program
+-				 **/
+-				if (first_mask)
+-					fdir_info->mask_added = FALSE;
++			if (ret)
+ 				goto out;
+-			}
+ 		}
+ 
+ 		goto out;
+@@ -2656,8 +2647,6 @@
+ 	struct ixgbe_eth_l2_tunnel_conf_ele *l2_tn_filter_ptr;
+ 	struct ixgbe_fdir_rule_ele *fdir_rule_ptr;
+ 	struct ixgbe_flow_mem *ixgbe_flow_mem_ptr;
+-	struct ixgbe_hw_fdir_info *fdir_info =
+-		IXGBE_DEV_PRIVATE_TO_FDIR_INFO(dev->data->dev_private);
+ 
+ 	switch (filter_type) {
+ 	case RTE_ETH_FILTER_NTUPLE:
+@@ -2710,8 +2699,6 @@
+ 			TAILQ_REMOVE(&filter_fdir_list,
+ 				fdir_rule_ptr, entries);
+ 			rte_free(fdir_rule_ptr);
+-			if (TAILQ_EMPTY(&filter_fdir_list))
+-				fdir_info->mask_added = false;
+ 		}
+ 		break;
+ 	case RTE_ETH_FILTER_L2_TUNNEL:
+diff -uNr dpdk-stable-17.05.2/drivers/net/liquidio/lio_ethdev.c dpdk-17.05/drivers/net/liquidio/lio_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/liquidio/lio_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/liquidio/lio_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -36,7 +36,6 @@
+ #include <rte_cycles.h>
+ #include <rte_malloc.h>
+ #include <rte_alarm.h>
+-#include <rte_ether.h>
+ 
+ #include "lio_logs.h"
+ #include "lio_23xx_vf.h"
+@@ -1349,8 +1348,7 @@
+ static int
+ lio_dev_start(struct rte_eth_dev *eth_dev)
+ {
+-	uint16_t mtu;
+-	uint32_t frame_len = eth_dev->data->dev_conf.rxmode.max_rx_pkt_len;
++	uint16_t mtu = eth_dev->data->dev_conf.rxmode.max_rx_pkt_len;
+ 	struct lio_device *lio_dev = LIO_DEV(eth_dev);
+ 	uint16_t timeout = LIO_MAX_CMD_TIMEOUT;
+ 	int ret = 0;
+@@ -1388,29 +1386,12 @@
+ 		goto dev_mtu_check_error;
+ 	}
+ 
+-	if (eth_dev->data->dev_conf.rxmode.jumbo_frame == 1) {
+-		if (frame_len <= ETHER_MAX_LEN ||
+-		    frame_len > LIO_MAX_RX_PKTLEN) {
+-			lio_dev_err(lio_dev, "max packet length should be >= %d and < %d when jumbo frame is enabled\n",
+-				    ETHER_MAX_LEN, LIO_MAX_RX_PKTLEN);
+-			ret = -EINVAL;
+-			goto dev_mtu_check_error;
+-		}
+-		mtu = (uint16_t)(frame_len - ETHER_HDR_LEN - ETHER_CRC_LEN);
+-	} else {
+-		/* default MTU */
+-		mtu = ETHER_MTU;
+-		eth_dev->data->dev_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
+-	}
+-
+ 	if (lio_dev->linfo.link.s.mtu != mtu) {
+ 		ret = lio_dev_validate_vf_mtu(eth_dev, mtu);
+ 		if (ret)
+ 			goto dev_mtu_check_error;
+ 	}
+ 
+-	eth_dev->data->mtu = mtu;
+-
+ 	return 0;
+ 
+ dev_mtu_check_error:
+@@ -2074,4 +2055,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_liovf, rte_liovf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_liovf, pci_id_liovf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_liovf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_liovf, "* igb_uio | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx4/mlx4.c dpdk-17.05/drivers/net/mlx4/mlx4.c
+--- dpdk-stable-17.05.2/drivers/net/mlx4/mlx4.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx4/mlx4.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2987,13 +2987,6 @@
+ 			NB_SEGS(rep) = 0x2a;
+ 			PORT(rep) = 0x2a;
+ 			rep->ol_flags = -1;
+-			/*
+-			 * Clear special flags in mbuf to avoid
+-			 * crashing while freeing.
+-			 */
+-			rep->ol_flags &=
+-				~(uint64_t)(IND_ATTACHED_MBUF |
+-					    CTRL_MBUF_FLAG);
+ #endif
+ 			assert(rep->buf_len == seg->buf_len);
+ 			/* Reconfigure sge to use rep instead of seg. */
+@@ -5315,7 +5308,6 @@
+ {
+ 	struct ibv_async_event event;
+ 	int port_change = 0;
+-	struct rte_eth_link *link = &dev->data->dev_link;
+ 	int ret = 0;
+ 
+ 	*events = 0;
+@@ -5337,20 +5329,22 @@
+ 			      event.event_type, event.element.port_num);
+ 		ibv_ack_async_event(&event);
+ 	}
+-	if (!port_change)
+-		return ret;
+-	mlx4_link_update(dev, 0);
+-	if (((link->link_speed == 0) && link->link_status) ||
+-	    ((link->link_speed != 0) && !link->link_status)) {
+-		if (!priv->pending_alarm) {
++
++	if (port_change ^ priv->pending_alarm) {
++		struct rte_eth_link *link = &dev->data->dev_link;
++
++		priv->pending_alarm = 0;
++		mlx4_link_update(dev, 0);
++		if (((link->link_speed == 0) && link->link_status) ||
++		    ((link->link_speed != 0) && !link->link_status)) {
+ 			/* Inconsistent status, check again later. */
+ 			priv->pending_alarm = 1;
+ 			rte_eal_alarm_set(MLX4_ALARM_TIMEOUT_US,
+ 					  mlx4_dev_link_status_handler,
+ 					  dev);
++		} else {
++			*events |= (1 << RTE_ETH_EVENT_INTR_LSC);
+ 		}
+-	} else {
+-		*events |= (1 << RTE_ETH_EVENT_INTR_LSC);
+ 	}
+ 	return ret;
+ }
+@@ -5371,7 +5365,6 @@
+ 
+ 	priv_lock(priv);
+ 	assert(priv->pending_alarm == 1);
+-	priv->pending_alarm = 0;
+ 	ret = priv_dev_status_handler(priv, dev, &events);
+ 	priv_unlock(priv);
+ 	if (ret > 0 && events & (1 << RTE_ETH_EVENT_INTR_LSC))
+@@ -5767,15 +5760,12 @@
+ 	ibv_dev = list[i];
+ 
+ 	DEBUG("device opened");
+-	if (ibv_query_device(attr_ctx, &device_attr)) {
+-		err = ENODEV;
++	if (ibv_query_device(attr_ctx, &device_attr))
+ 		goto error;
+-	}
+ 	INFO("%u port(s) detected", device_attr.phys_port_cnt);
+ 
+ 	if (mlx4_args(pci_dev->device.devargs, &conf)) {
+ 		ERROR("failed to process device arguments");
+-		err = EINVAL;
+ 		goto error;
+ 	}
+ 	/* Use all ports when none are defined */
+@@ -5809,23 +5799,19 @@
+ 		DEBUG("using port %u (%08" PRIx32 ")", port, test);
+ 
+ 		ctx = ibv_open_device(ibv_dev);
+-		if (ctx == NULL) {
+-			err = ENODEV;
++		if (ctx == NULL)
+ 			goto port_error;
+-		}
+ 
+ 		/* Check port status. */
+ 		err = ibv_query_port(ctx, port, &port_attr);
+ 		if (err) {
+ 			ERROR("port query failed: %s", strerror(err));
+-			err = ENODEV;
+ 			goto port_error;
+ 		}
+ 
+ 		if (port_attr.link_layer != IBV_LINK_LAYER_ETHERNET) {
+ 			ERROR("port %d is not configured in Ethernet mode",
+ 			      port);
+-			err = EINVAL;
+ 			goto port_error;
+ 		}
+ 
+@@ -5862,7 +5848,6 @@
+ #ifdef HAVE_EXP_QUERY_DEVICE
+ 		if (ibv_exp_query_device(ctx, &exp_device_attr)) {
+ 			ERROR("ibv_exp_query_device() failed");
+-			err = ENODEV;
+ 			goto port_error;
+ 		}
+ #ifdef RSS_SUPPORT
+@@ -5938,7 +5923,6 @@
+ 		if (priv_get_mac(priv, &mac.addr_bytes)) {
+ 			ERROR("cannot get MAC address, is mlx4_en loaded?"
+ 			      " (errno: %s)", strerror(errno));
+-			err = ENODEV;
+ 			goto port_error;
+ 		}
+ 		INFO("port %u MAC address is %02x:%02x:%02x:%02x:%02x:%02x",
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx4/mlx4_flow.c dpdk-17.05/drivers/net/mlx4/mlx4_flow.c
+--- dpdk-stable-17.05.2/drivers/net/mlx4/mlx4_flow.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx4/mlx4_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -829,7 +829,7 @@
+ 		return NULL;
+ 	}
+ 	if (action->drop) {
+-		qp = priv->flow_drop_queue ? priv->flow_drop_queue->qp : NULL;
++		qp = priv->flow_drop_queue->qp;
+ 	} else {
+ 		struct rxq *rxq = (*priv->rxqs)[action->queue_id];
+ 
+@@ -837,8 +837,6 @@
+ 		rte_flow->qp = qp;
+ 	}
+ 	rte_flow->ibv_attr = ibv_attr;
+-	if (!priv->started)
+-		return rte_flow;
+ 	rte_flow->ibv_flow = ibv_create_flow(qp, rte_flow->ibv_attr);
+ 	if (!rte_flow->ibv_flow) {
+ 		rte_flow_error_set(error, ENOMEM, RTE_FLOW_ERROR_TYPE_HANDLE,
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5.c dpdk-17.05/drivers/net/mlx5/mlx5.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5.c	2017-05-10 18:11:34.000000000 -0700
+@@ -246,10 +246,8 @@
+ 	.filter_ctrl = mlx5_dev_filter_ctrl,
+ 	.rx_descriptor_status = mlx5_rx_descriptor_status,
+ 	.tx_descriptor_status = mlx5_tx_descriptor_status,
+-#ifdef HAVE_UPDATE_CQ_CI
+ 	.rx_queue_intr_enable = mlx5_rx_intr_enable,
+ 	.rx_queue_intr_disable = mlx5_rx_intr_disable,
+-#endif
+ };
+ 
+ static struct {
+@@ -791,7 +789,6 @@
+ 		eth_dev->device->driver = &mlx5_driver.driver;
+ 		priv->dev = eth_dev;
+ 		eth_dev->dev_ops = &mlx5_dev_ops;
+-		TAILQ_INIT(&priv->flows);
+ 
+ 		/* Bring Ethernet device up. */
+ 		DEBUG("forcing Ethernet interface up");
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5.h dpdk-17.05/drivers/net/mlx5/mlx5.h
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5.h	2017-05-10 18:11:34.000000000 -0700
+@@ -155,7 +155,7 @@
+ 	struct fdir_filter_list *fdir_filter_list; /* Flow director rules. */
+ 	struct fdir_queue *fdir_drop_queue; /* Flow director drop queue. */
+ 	struct rte_flow_drop *flow_drop_queue; /* Flow drop queue. */
+-	TAILQ_HEAD(mlx5_flows, rte_flow) flows; /* RTE Flow rules. */
++	LIST_HEAD(mlx5_flows, rte_flow) flows; /* RTE Flow rules. */
+ 	uint32_t link_speed_capa; /* Link speed capabilities. */
+ 	struct mlx5_xstats_ctrl xstats_ctrl; /* Extended stats control. */
+ 	rte_spinlock_t lock; /* Lock for control functions. */
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_ethdev.c dpdk-17.05/drivers/net/mlx5/mlx5_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -119,7 +119,6 @@
+ #define ETHTOOL_LINK_MODE_100000baseCR4_Full_BIT 38
+ #define ETHTOOL_LINK_MODE_100000baseLR4_ER4_Full_BIT 39
+ #endif
+-#define ETHTOOL_LINK_MODE_MASK_MAX_KERNEL_NU32 (SCHAR_MAX)
+ 
+ /**
+  * Return private structure associated with an Ethernet device.
+@@ -807,12 +806,9 @@
+ mlx5_link_update_unlocked_gs(struct rte_eth_dev *dev, int wait_to_complete)
+ {
+ 	struct priv *priv = mlx5_get_priv(dev);
+-	__extension__ struct {
+-		struct ethtool_link_settings edata;
+-		uint32_t link_mode_data[3 *
+-					ETHTOOL_LINK_MODE_MASK_MAX_KERNEL_NU32];
+-	} ecmd;
+-
++	struct ethtool_link_settings edata = {
++		.cmd = ETHTOOL_GLINKSETTINGS,
++	};
+ 	struct ifreq ifr;
+ 	struct rte_eth_link dev_link;
+ 	uint64_t sc;
+@@ -825,23 +821,15 @@
+ 	memset(&dev_link, 0, sizeof(dev_link));
+ 	dev_link.link_status = ((ifr.ifr_flags & IFF_UP) &&
+ 				(ifr.ifr_flags & IFF_RUNNING));
+-	memset(&ecmd, 0, sizeof(ecmd));
+-	ecmd.edata.cmd = ETHTOOL_GLINKSETTINGS;
+-	ifr.ifr_data = (void *)&ecmd;
+-	if (priv_ifreq(priv, SIOCETHTOOL, &ifr)) {
+-		DEBUG("ioctl(SIOCETHTOOL, ETHTOOL_GLINKSETTINGS) failed: %s",
+-		      strerror(errno));
+-		return -1;
+-	}
+-	ecmd.edata.link_mode_masks_nwords = -ecmd.edata.link_mode_masks_nwords;
++	ifr.ifr_data = (void *)&edata;
+ 	if (priv_ifreq(priv, SIOCETHTOOL, &ifr)) {
+ 		DEBUG("ioctl(SIOCETHTOOL, ETHTOOL_GLINKSETTINGS) failed: %s",
+ 		      strerror(errno));
+ 		return -1;
+ 	}
+-	dev_link.link_speed = ecmd.edata.speed;
+-	sc = ecmd.edata.link_mode_masks[0] |
+-		((uint64_t)ecmd.edata.link_mode_masks[1] << 32);
++	dev_link.link_speed = edata.speed;
++	sc = edata.link_mode_masks[0] |
++		((uint64_t)edata.link_mode_masks[1] << 32);
+ 	priv->link_speed_capa = 0;
+ 	if (sc & ETHTOOL_LINK_MODE_Autoneg_BIT)
+ 		priv->link_speed_capa |= ETH_LINK_SPEED_AUTONEG;
+@@ -877,7 +865,7 @@
+ 		  ETHTOOL_LINK_MODE_100000baseCR4_Full_BIT |
+ 		  ETHTOOL_LINK_MODE_100000baseLR4_ER4_Full_BIT))
+ 		priv->link_speed_capa |= ETH_LINK_SPEED_100G;
+-	dev_link.link_duplex = ((ecmd.edata.duplex == DUPLEX_HALF) ?
++	dev_link.link_duplex = ((edata.duplex == DUPLEX_HALF) ?
+ 				ETH_LINK_HALF_DUPLEX : ETH_LINK_FULL_DUPLEX);
+ 	dev_link.link_autoneg = !(dev->data->dev_conf.link_speeds &
+ 				  ETH_LINK_SPEED_FIXED);
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_fdir.c dpdk-17.05/drivers/net/mlx5/mlx5_fdir.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_fdir.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_fdir.c	2017-05-10 18:11:34.000000000 -0700
+@@ -144,7 +144,6 @@
+ 	case RTE_ETH_FLOW_NONFRAG_IPV4_TCP:
+ 		desc->src_port = fdir_filter->input.flow.udp4_flow.src_port;
+ 		desc->dst_port = fdir_filter->input.flow.udp4_flow.dst_port;
+-		/* fallthrough */
+ 	case RTE_ETH_FLOW_NONFRAG_IPV4_OTHER:
+ 		desc->src_ip[0] = fdir_filter->input.flow.ip4_flow.src_ip;
+ 		desc->dst_ip[0] = fdir_filter->input.flow.ip4_flow.dst_ip;
+@@ -734,11 +733,9 @@
+ 
+ 	/* Destroy flow director context in each RX queue. */
+ 	for (i = 0; (i != priv->rxqs_n); i++) {
+-		struct rxq_ctrl *rxq_ctrl;
++		struct rxq_ctrl *rxq_ctrl =
++			container_of((*priv->rxqs)[i], struct rxq_ctrl, rxq);
+ 
+-		if (!(*priv->rxqs)[i])
+-			continue;
+-		rxq_ctrl = container_of((*priv->rxqs)[i], struct rxq_ctrl, rxq);
+ 		if (!rxq_ctrl->fdir_queue)
+ 			continue;
+ 		priv_fdir_queue_destroy(priv, rxq_ctrl->fdir_queue);
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_flow.c dpdk-17.05/drivers/net/mlx5/mlx5_flow.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_flow.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -91,7 +91,7 @@
+ 		       void *data);
+ 
+ struct rte_flow {
+-	TAILQ_ENTRY(rte_flow) next; /**< Pointer to the next flow structure. */
++	LIST_ENTRY(rte_flow) next; /**< Pointer to the next flow structure. */
+ 	struct ibv_exp_flow_attr *ibv_attr; /**< Pointer to Verbs attributes. */
+ 	struct ibv_exp_rwq_ind_table *ind_table; /**< Indirection table. */
+ 	struct ibv_qp *qp; /**< Verbs queue pair. */
+@@ -1230,7 +1230,7 @@
+ 	priv_lock(priv);
+ 	flow = priv_flow_create(priv, attr, items, actions, error);
+ 	if (flow) {
+-		TAILQ_INSERT_TAIL(&priv->flows, flow, next);
++		LIST_INSERT_HEAD(&priv->flows, flow, next);
+ 		DEBUG("Flow created %p", (void *)flow);
+ 	}
+ 	priv_unlock(priv);
+@@ -1249,7 +1249,8 @@
+ priv_flow_destroy(struct priv *priv,
+ 		  struct rte_flow *flow)
+ {
+-	TAILQ_REMOVE(&priv->flows, flow, next);
++	(void)priv;
++	LIST_REMOVE(flow, next);
+ 	if (flow->ibv_flow)
+ 		claim_zero(ibv_exp_destroy_flow(flow->ibv_flow));
+ 	if (flow->drop)
+@@ -1274,9 +1275,9 @@
+ 		 */
+ 		for (queue_n = 0; queue_n < flow->rxqs_n; ++queue_n) {
+ 			rxq = flow->rxqs[queue_n];
+-			for (tmp = TAILQ_FIRST(&priv->flows);
++			for (tmp = LIST_FIRST(&priv->flows);
+ 			     tmp;
+-			     tmp = TAILQ_NEXT(tmp, next)) {
++			     tmp = LIST_NEXT(tmp, next)) {
+ 				uint32_t tqueue_n;
+ 
+ 				if (tmp->drop)
+@@ -1329,10 +1330,10 @@
+ static void
+ priv_flow_flush(struct priv *priv)
+ {
+-	while (!TAILQ_EMPTY(&priv->flows)) {
++	while (!LIST_EMPTY(&priv->flows)) {
+ 		struct rte_flow *flow;
+ 
+-		flow = TAILQ_FIRST(&priv->flows);
++		flow = LIST_FIRST(&priv->flows);
+ 		priv_flow_destroy(priv, flow);
+ 	}
+ }
+@@ -1493,7 +1494,9 @@
+ {
+ 	struct rte_flow *flow;
+ 
+-	TAILQ_FOREACH_REVERSE(flow, &priv->flows, mlx5_flows, next) {
++	for (flow = LIST_FIRST(&priv->flows);
++	     flow;
++	     flow = LIST_NEXT(flow, next)) {
+ 		claim_zero(ibv_exp_destroy_flow(flow->ibv_flow));
+ 		flow->ibv_flow = NULL;
+ 		if (flow->mark) {
+@@ -1525,7 +1528,9 @@
+ 	ret = priv_flow_create_drop_queue(priv);
+ 	if (ret)
+ 		return -1;
+-	TAILQ_FOREACH(flow, &priv->flows, next) {
++	for (flow = LIST_FIRST(&priv->flows);
++	     flow;
++	     flow = LIST_NEXT(flow, next)) {
+ 		struct ibv_qp *qp;
+ 
+ 		if (flow->drop)
+@@ -1565,9 +1570,9 @@
+ {
+ 	struct rte_flow *flow;
+ 
+-	for (flow = TAILQ_FIRST(&priv->flows);
++	for (flow = LIST_FIRST(&priv->flows);
+ 	     flow;
+-	     flow = TAILQ_NEXT(flow, next)) {
++	     flow = LIST_NEXT(flow, next)) {
+ 		unsigned int n;
+ 
+ 		if (flow->drop)
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxq.c dpdk-17.05/drivers/net/mlx5/mlx5_rxq.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxq.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_rxq.c	2017-05-10 18:11:34.000000000 -0700
+@@ -838,16 +838,12 @@
+ rxq_setup(struct rxq_ctrl *tmpl)
+ {
+ 	struct ibv_cq *ibcq = tmpl->cq;
+-	struct ibv_mlx5_cq_info cq_info;
++	struct mlx5_cq *cq = to_mxxx(cq, cq);
+ 	struct mlx5_rwq *rwq = container_of(tmpl->wq, struct mlx5_rwq, wq);
+ 	struct rte_mbuf *(*elts)[1 << tmpl->rxq.elts_n] =
+ 		rte_calloc_socket("RXQ", 1, sizeof(*elts), 0, tmpl->socket);
+ 
+-	if (ibv_mlx5_exp_get_cq_info(ibcq, &cq_info)) {
+-		ERROR("Unable to query CQ info. check your OFED.");
+-		return ENOTSUP;
+-	}
+-	if (cq_info.cqe_size != RTE_CACHE_LINE_SIZE) {
++	if (cq->cqe_sz != RTE_CACHE_LINE_SIZE) {
+ 		ERROR("Wrong MLX5_CQE_SIZE environment variable value: "
+ 		      "it should be set to %u", RTE_CACHE_LINE_SIZE);
+ 		return EINVAL;
+@@ -855,16 +851,16 @@
+ 	if (elts == NULL)
+ 		return ENOMEM;
+ 	tmpl->rxq.rq_db = rwq->rq.db;
+-	tmpl->rxq.cqe_n = log2above(cq_info.cqe_cnt);
++	tmpl->rxq.cqe_n = log2above(ibcq->cqe);
+ 	tmpl->rxq.cq_ci = 0;
+ 	tmpl->rxq.rq_ci = 0;
+-	tmpl->rxq.cq_db = cq_info.dbrec;
++	tmpl->rxq.cq_db = cq->dbrec;
+ 	tmpl->rxq.wqes =
+ 		(volatile struct mlx5_wqe_data_seg (*)[])
+ 		(uintptr_t)rwq->rq.buff;
+ 	tmpl->rxq.cqes =
+ 		(volatile struct mlx5_cqe (*)[])
+-		(uintptr_t)cq_info.buf;
++		(uintptr_t)cq->active_buf->buf;
+ 	tmpl->rxq.elts = elts;
+ 	return 0;
+ }
+@@ -978,10 +974,10 @@
+ 	if (dev->data->dev_conf.intr_conf.rxq) {
+ 		tmpl.channel = ibv_create_comp_channel(priv->ctx);
+ 		if (tmpl.channel == NULL) {
++			dev->data->dev_conf.intr_conf.rxq = 0;
+ 			ret = ENOMEM;
+-			ERROR("%p: Rx interrupt completion channel creation"
+-			      " failure: %s",
+-			      (void *)dev, strerror(ret));
++			ERROR("%p: Comp Channel creation failure: %s",
++			(void *)dev, strerror(ret));
+ 			goto error;
+ 		}
+ 	}
+@@ -1310,159 +1306,111 @@
+ }
+ 
+ /**
+- * Allocate queue vector and fill epoll fd list for Rx interrupts.
++ * Fill epoll fd list for rxq interrupts.
+  *
+  * @param priv
+- *   Pointer to private structure.
++ *   Private structure.
+  *
+  * @return
+  *   0 on success, negative on failure.
+  */
+ int
+-priv_rx_intr_vec_enable(struct priv *priv)
++priv_intr_efd_enable(struct priv *priv)
+ {
+ 	unsigned int i;
+ 	unsigned int rxqs_n = priv->rxqs_n;
+ 	unsigned int n = RTE_MIN(rxqs_n, (uint32_t)RTE_MAX_RXTX_INTR_VEC_ID);
+-	unsigned int count = 0;
+ 	struct rte_intr_handle *intr_handle = priv->dev->intr_handle;
+ 
+-	if (!priv->dev->data->dev_conf.intr_conf.rxq)
++	if (n == 0)
+ 		return 0;
+-	priv_rx_intr_vec_disable(priv);
+-	intr_handle->intr_vec = malloc(sizeof(intr_handle->intr_vec[rxqs_n]));
+-	if (intr_handle->intr_vec == NULL) {
+-		ERROR("failed to allocate memory for interrupt vector,"
+-		      " Rx interrupts will not be supported");
+-		return -ENOMEM;
++	if (n < rxqs_n) {
++		WARN("rxqs num is larger than EAL max interrupt vector "
++		     "%u > %u unable to supprt rxq interrupts",
++		     rxqs_n, (uint32_t)RTE_MAX_RXTX_INTR_VEC_ID);
++		return -EINVAL;
+ 	}
+ 	intr_handle->type = RTE_INTR_HANDLE_EXT;
+ 	for (i = 0; i != n; ++i) {
+ 		struct rxq *rxq = (*priv->rxqs)[i];
+ 		struct rxq_ctrl *rxq_ctrl =
+ 			container_of(rxq, struct rxq_ctrl, rxq);
+-		int fd;
++		int fd = rxq_ctrl->channel->fd;
+ 		int flags;
+ 		int rc;
+ 
+-		/* Skip queues that cannot request interrupts. */
+-		if (!rxq || !rxq_ctrl->channel) {
+-			/* Use invalid intr_vec[] index to disable entry. */
+-			intr_handle->intr_vec[i] =
+-				RTE_INTR_VEC_RXTX_OFFSET +
+-				RTE_MAX_RXTX_INTR_VEC_ID;
+-			continue;
+-		}
+-		if (count >= RTE_MAX_RXTX_INTR_VEC_ID) {
+-			ERROR("too many Rx queues for interrupt vector size"
+-			      " (%d), Rx interrupts cannot be enabled",
+-			      RTE_MAX_RXTX_INTR_VEC_ID);
+-			priv_rx_intr_vec_disable(priv);
+-			return -1;
+-		}
+-		fd = rxq_ctrl->channel->fd;
+ 		flags = fcntl(fd, F_GETFL);
+ 		rc = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+ 		if (rc < 0) {
+-			ERROR("failed to make Rx interrupt file descriptor"
+-			      " %d non-blocking for queue index %d", fd, i);
+-			priv_rx_intr_vec_disable(priv);
++			WARN("failed to change rxq interrupt file "
++			     "descriptor %d for queue index %d", fd, i);
+ 			return -1;
+ 		}
+-		intr_handle->intr_vec[i] = RTE_INTR_VEC_RXTX_OFFSET + count;
+-		intr_handle->efds[count] = fd;
+-		count++;
+-	}
+-	if (!count)
+-		priv_rx_intr_vec_disable(priv);
+-	else
+-		intr_handle->nb_efd = count;
++		intr_handle->efds[i] = fd;
++	}
++	intr_handle->nb_efd = n;
+ 	return 0;
+ }
+ 
+ /**
+- * Clean up Rx interrupts handler.
++ * Clean epoll fd list for rxq interrupts.
+  *
+  * @param priv
+- *   Pointer to private structure.
++ *   Private structure.
+  */
+ void
+-priv_rx_intr_vec_disable(struct priv *priv)
++priv_intr_efd_disable(struct priv *priv)
+ {
+ 	struct rte_intr_handle *intr_handle = priv->dev->intr_handle;
+ 
+ 	rte_intr_free_epoll_fd(intr_handle);
+-	free(intr_handle->intr_vec);
+-	intr_handle->nb_efd = 0;
+-	intr_handle->intr_vec = NULL;
+ }
+ 
+-#ifdef HAVE_UPDATE_CQ_CI
+-
+ /**
+- * DPDK callback for Rx queue interrupt enable.
++ * Create and init interrupt vector array.
+  *
+- * @param dev
+- *   Pointer to Ethernet device structure.
+- * @param rx_queue_id
+- *   Rx queue number.
++ * @param priv
++ *   Private structure.
+  *
+  * @return
+  *   0 on success, negative on failure.
+  */
+ int
+-mlx5_rx_intr_enable(struct rte_eth_dev *dev, uint16_t rx_queue_id)
++priv_create_intr_vec(struct priv *priv)
+ {
+-	struct priv *priv = mlx5_get_priv(dev);
+-	struct rxq *rxq = (*priv->rxqs)[rx_queue_id];
+-	struct rxq_ctrl *rxq_ctrl = container_of(rxq, struct rxq_ctrl, rxq);
+-	int ret;
++	unsigned int rxqs_n = priv->rxqs_n;
++	unsigned int i;
++	struct rte_intr_handle *intr_handle = priv->dev->intr_handle;
+ 
+-	if (!rxq || !rxq_ctrl->channel) {
+-		ret = EINVAL;
+-	} else {
+-		ibv_mlx5_exp_update_cq_ci(rxq_ctrl->cq, rxq->cq_ci);
+-		ret = ibv_req_notify_cq(rxq_ctrl->cq, 0);
++	if (rxqs_n == 0)
++		return 0;
++	intr_handle->intr_vec = (int *)
++		rte_malloc("intr_vec", rxqs_n * sizeof(int), 0);
++	if (intr_handle->intr_vec == NULL) {
++		WARN("Failed to allocate memory for intr_vec "
++		     "rxq interrupt will not be supported");
++		return -ENOMEM;
+ 	}
+-	if (ret)
+-		WARN("unable to arm interrupt on rx queue %d", rx_queue_id);
+-	return -ret;
++	for (i = 0; i != rxqs_n; ++i) {
++		/* 1:1 mapping between rxq and interrupt. */
++		intr_handle->intr_vec[i] = RTE_INTR_VEC_RXTX_OFFSET + i;
++	}
++	return 0;
+ }
+ 
+ /**
+- * DPDK callback for Rx queue interrupt disable.
++ * Destroy init interrupt vector array.
+  *
+- * @param dev
+- *   Pointer to Ethernet device structure.
+- * @param rx_queue_id
+- *   Rx queue number.
++ * @param priv
++ *   Private structure.
+  *
+  * @return
+  *   0 on success, negative on failure.
+  */
+-int
+-mlx5_rx_intr_disable(struct rte_eth_dev *dev, uint16_t rx_queue_id)
++void
++priv_destroy_intr_vec(struct priv *priv)
+ {
+-	struct priv *priv = mlx5_get_priv(dev);
+-	struct rxq *rxq = (*priv->rxqs)[rx_queue_id];
+-	struct rxq_ctrl *rxq_ctrl = container_of(rxq, struct rxq_ctrl, rxq);
+-	struct ibv_cq *ev_cq;
+-	void *ev_ctx;
+-	int ret;
++	struct rte_intr_handle *intr_handle = priv->dev->intr_handle;
+ 
+-	if (!rxq || !rxq_ctrl->channel) {
+-		ret = EINVAL;
+-	} else {
+-		ret = ibv_get_cq_event(rxq_ctrl->cq->channel, &ev_cq, &ev_ctx);
+-		if (ret || ev_cq != rxq_ctrl->cq)
+-			ret = EINVAL;
+-	}
+-	if (ret)
+-		WARN("unable to disable interrupt on rx queue %d",
+-		     rx_queue_id);
+-	else
+-		ibv_ack_cq_events(rxq_ctrl->cq, 1);
+-	return -ret;
++	rte_free(intr_handle->intr_vec);
+ }
+-
+-#endif /* HAVE_UPDATE_CQ_CI */
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxtx.c dpdk-17.05/drivers/net/mlx5/mlx5_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -533,7 +533,6 @@
+ 		uint16_t ehdr;
+ 		uint8_t cs_flags = 0;
+ 		uint64_t tso = 0;
+-		uint16_t tso_segsz = 0;
+ #ifdef MLX5_PMD_SOFT_COUNTERS
+ 		uint32_t total_length = 0;
+ #endif
+@@ -629,7 +628,6 @@
+ 
+ 				tso_header_sz = buf->l2_len + vlan_sz +
+ 						buf->l3_len + buf->l4_len;
+-				tso_segsz = buf->tso_segsz;
+ 
+ 				if (is_tunneled	&& txq->tunnel_en) {
+ 					tso_header_sz += buf->outer_l2_len +
+@@ -829,7 +827,7 @@
+ 			};
+ 			wqe->eseg = (rte_v128u32_t){
+ 				0,
+-				cs_flags | (htons(tso_segsz) << 16),
++				cs_flags | (htons(buf->tso_segsz) << 16),
+ 				0,
+ 				(ehdr << 16) | htons(tso_header_sz),
+ 			};
+@@ -2020,7 +2018,7 @@
+ 			pkt = seg;
+ 			assert(len >= (rxq->crc_present << 2));
+ 			/* Update packet information. */
+-			pkt->packet_type = rxq_cq_to_pkt_type(cqe);
++			pkt->packet_type = 0;
+ 			pkt->ol_flags = 0;
+ 			if (rss_hash_res && rxq->rss_hash) {
+ 				pkt->hash.rss = rss_hash_res;
+@@ -2038,8 +2036,10 @@
+ 						mlx5_flow_mark_get(mark);
+ 				}
+ 			}
+-			if (rxq->csum | rxq->csum_l2tun)
++			if (rxq->csum | rxq->csum_l2tun) {
++				pkt->packet_type = rxq_cq_to_pkt_type(cqe);
+ 				pkt->ol_flags |= rxq_cq_to_ol_flags(rxq, cqe);
++			}
+ 			if (rxq->vlan_strip &&
+ 			    (cqe->hdr_type_etc &
+ 			     htons(MLX5_CQE_VLAN_STRIPPED))) {
+@@ -2150,3 +2150,76 @@
+ 	(void)pkts_n;
+ 	return 0;
+ }
++
++/**
++ * DPDK callback for rx queue interrupt enable.
++ *
++ * @param dev
++ *   Pointer to Ethernet device structure.
++ * @param rx_queue_id
++ *   RX queue number
++ *
++ * @return
++ *   0 on success, negative on failure.
++ */
++int
++mlx5_rx_intr_enable(struct rte_eth_dev *dev, uint16_t rx_queue_id)
++{
++#ifdef HAVE_UPDATE_CQ_CI
++	struct priv *priv = mlx5_get_priv(dev);
++	struct rxq *rxq = (*priv->rxqs)[rx_queue_id];
++	struct rxq_ctrl *rxq_ctrl = container_of(rxq, struct rxq_ctrl, rxq);
++	struct ibv_cq *cq = rxq_ctrl->cq;
++	uint16_t ci = rxq->cq_ci;
++	int ret = 0;
++
++	ibv_mlx5_exp_update_cq_ci(cq, ci);
++	ret = ibv_req_notify_cq(cq, 0);
++#else
++	int ret = -1;
++	(void)dev;
++	(void)rx_queue_id;
++#endif
++	if (ret)
++		WARN("unable to arm interrupt on rx queue %d", rx_queue_id);
++	return ret;
++}
++
++/**
++ * DPDK callback for rx queue interrupt disable.
++ *
++ * @param dev
++ *   Pointer to Ethernet device structure.
++ * @param rx_queue_id
++ *   RX queue number
++ *
++ * @return
++ *   0 on success, negative on failure.
++ */
++int
++mlx5_rx_intr_disable(struct rte_eth_dev *dev, uint16_t rx_queue_id)
++{
++#ifdef HAVE_UPDATE_CQ_CI
++	struct priv *priv = mlx5_get_priv(dev);
++	struct rxq *rxq = (*priv->rxqs)[rx_queue_id];
++	struct rxq_ctrl *rxq_ctrl = container_of(rxq, struct rxq_ctrl, rxq);
++	struct ibv_cq *cq = rxq_ctrl->cq;
++	struct ibv_cq *ev_cq;
++	void *ev_ctx;
++	int ret = 0;
++
++	ret = ibv_get_cq_event(cq->channel, &ev_cq, &ev_ctx);
++	if (ret || ev_cq != cq)
++		ret = -1;
++	else
++		ibv_ack_cq_events(cq, 1);
++#else
++	int ret = -1;
++	(void)dev;
++	(void)rx_queue_id;
++#endif
++	if (ret)
++		WARN("unable to disable interrupt on rx queue %d",
++		     rx_queue_id);
++	return ret;
++}
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxtx.h dpdk-17.05/drivers/net/mlx5/mlx5_rxtx.h
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_rxtx.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_rxtx.h	2017-05-10 18:11:34.000000000 -0700
+@@ -298,6 +298,10 @@
+ void priv_destroy_hash_rxqs(struct priv *);
+ int priv_allow_flow_type(struct priv *, enum hash_rxq_flow_type);
+ int priv_rehash_flows(struct priv *);
++int priv_intr_efd_enable(struct priv *priv);
++void priv_intr_efd_disable(struct priv *priv);
++int priv_create_intr_vec(struct priv *priv);
++void priv_destroy_intr_vec(struct priv *priv);
+ void rxq_cleanup(struct rxq_ctrl *);
+ int rxq_rehash(struct rte_eth_dev *, struct rxq_ctrl *);
+ int rxq_ctrl_setup(struct rte_eth_dev *, struct rxq_ctrl *, uint16_t,
+@@ -307,12 +311,6 @@
+ 			const struct rte_eth_rxconf *, struct rte_mempool *);
+ void mlx5_rx_queue_release(void *);
+ uint16_t mlx5_rx_burst_secondary_setup(void *, struct rte_mbuf **, uint16_t);
+-int priv_rx_intr_vec_enable(struct priv *priv);
+-void priv_rx_intr_vec_disable(struct priv *priv);
+-#ifdef HAVE_UPDATE_CQ_CI
+-int mlx5_rx_intr_enable(struct rte_eth_dev *dev, uint16_t rx_queue_id);
+-int mlx5_rx_intr_disable(struct rte_eth_dev *dev, uint16_t rx_queue_id);
+-#endif /* HAVE_UPDATE_CQ_CI */
+ 
+ /* mlx5_txq.c */
+ 
+@@ -335,6 +333,8 @@
+ uint16_t removed_rx_burst(void *, struct rte_mbuf **, uint16_t);
+ int mlx5_rx_descriptor_status(void *, uint16_t);
+ int mlx5_tx_descriptor_status(void *, uint16_t);
++int mlx5_rx_intr_enable(struct rte_eth_dev *dev, uint16_t rx_queue_id);
++int mlx5_rx_intr_disable(struct rte_eth_dev *dev, uint16_t rx_queue_id);
+ 
+ /* mlx5_mr.c */
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_trigger.c dpdk-17.05/drivers/net/mlx5/mlx5_trigger.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_trigger.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_trigger.c	2017-05-10 18:11:34.000000000 -0700
+@@ -94,13 +94,12 @@
+ 		      (void *)priv, strerror(err));
+ 		goto error;
+ 	}
+-	err = priv_rx_intr_vec_enable(priv);
+-	if (err) {
+-		ERROR("%p: RX interrupt vector creation failed",
+-		      (void *)priv);
+-		goto error;
+-	}
+ 	priv_dev_interrupt_handler_install(priv, dev);
++	if (dev->data->dev_conf.intr_conf.rxq) {
++		err = priv_intr_efd_enable(priv);
++		if (!err)
++			err = priv_create_intr_vec(priv);
++	}
+ 	priv_xstats_init(priv);
+ 	priv_unlock(priv);
+ 	return 0;
+@@ -141,8 +140,11 @@
+ 	priv_destroy_hash_rxqs(priv);
+ 	priv_fdir_disable(priv);
+ 	priv_flow_stop(priv);
+-	priv_rx_intr_vec_disable(priv);
+ 	priv_dev_interrupt_handler_uninstall(priv, dev);
++	if (priv->dev->data->dev_conf.intr_conf.rxq) {
++		priv_destroy_intr_vec(priv);
++		priv_intr_efd_disable(priv);
++	}
+ 	priv->started = 0;
+ 	priv_unlock(priv);
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_txq.c dpdk-17.05/drivers/net/mlx5/mlx5_txq.c
+--- dpdk-stable-17.05.2/drivers/net/mlx5/mlx5_txq.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/mlx5/mlx5_txq.c	2017-05-10 18:11:34.000000000 -0700
+@@ -117,7 +117,7 @@
+ 		struct rte_mbuf *elt = (*elts)[elts_tail];
+ 
+ 		assert(elt != NULL);
+-		rte_pktmbuf_free_seg(elt);
++		rte_pktmbuf_free(elt);
+ #ifndef NDEBUG
+ 		/* Poisoning. */
+ 		memset(&(*elts)[elts_tail],
+@@ -173,27 +173,23 @@
+ {
+ 	struct mlx5_qp *qp = to_mqp(tmpl->qp);
+ 	struct ibv_cq *ibcq = tmpl->cq;
+-	struct ibv_mlx5_cq_info cq_info;
++	struct mlx5_cq *cq = to_mxxx(cq, cq);
+ 
+-	if (ibv_mlx5_exp_get_cq_info(ibcq, &cq_info)) {
+-		ERROR("Unable to query CQ info. check your OFED.");
+-		return ENOTSUP;
+-	}
+-	if (cq_info.cqe_size != RTE_CACHE_LINE_SIZE) {
++	if (cq->cqe_sz != RTE_CACHE_LINE_SIZE) {
+ 		ERROR("Wrong MLX5_CQE_SIZE environment variable value: "
+ 		      "it should be set to %u", RTE_CACHE_LINE_SIZE);
+ 		return EINVAL;
+ 	}
+-	tmpl->txq.cqe_n = log2above(cq_info.cqe_cnt);
++	tmpl->txq.cqe_n = log2above(ibcq->cqe);
+ 	tmpl->txq.qp_num_8s = qp->ctrl_seg.qp_num << 8;
+ 	tmpl->txq.wqes = qp->gen_data.sqstart;
+ 	tmpl->txq.wqe_n = log2above(qp->sq.wqe_cnt);
+ 	tmpl->txq.qp_db = &qp->gen_data.db[MLX5_SND_DBR];
+ 	tmpl->txq.bf_reg = qp->gen_data.bf->reg;
+-	tmpl->txq.cq_db = cq_info.dbrec;
++	tmpl->txq.cq_db = cq->dbrec;
+ 	tmpl->txq.cqes =
+ 		(volatile struct mlx5_cqe (*)[])
+-		(uintptr_t)cq_info.buf;
++		(uintptr_t)cq->active_buf->buf;
+ 	tmpl->txq.elts =
+ 		(struct rte_mbuf *(*)[1 << tmpl->txq.elts_n])
+ 		((uintptr_t)txq_ctrl + sizeof(*txq_ctrl));
+diff -uNr dpdk-stable-17.05.2/drivers/net/nfp/nfp_net.c dpdk-17.05/drivers/net/nfp/nfp_net.c
+--- dpdk-stable-17.05.2/drivers/net/nfp/nfp_net.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/nfp/nfp_net.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2605,7 +2605,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_nfp, rte_nfp_net_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_nfp, pci_id_nfp_net_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_nfp, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_nfp, "* igb_uio | uio_pci_generic | vfio");
+ 
+ /*
+  * Local variables:
+diff -uNr dpdk-stable-17.05.2/drivers/net/qede/qede_ethdev.c dpdk-17.05/drivers/net/qede/qede_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/qede/qede_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/qede/qede_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -308,10 +308,9 @@
+ 
+ 	DP_INFO(edev, "*********************************\n");
+ 	DP_INFO(edev, " DPDK version:%s\n", rte_version());
+-	DP_INFO(edev, " Chip details : %s %c%d\n",
++	DP_INFO(edev, " Chip details : %s%d\n",
+ 		  ECORE_IS_BB(edev) ? "BB" : "AH",
+-		  'A' + edev->chip_rev,
+-		  (int)edev->chip_metal);
++		  CHIP_REV_IS_A0(edev) ? 0 : 1);
+ 	snprintf(ver_str, QEDE_PMD_DRV_VER_STR_SIZE, "%d.%d.%d.%d",
+ 		 info->fw_major, info->fw_minor, info->fw_rev, info->fw_eng);
+ 	snprintf(drv_ver, QEDE_PMD_DRV_VER_STR_SIZE, "%s_%s",
+@@ -2465,7 +2464,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_qede, rte_qede_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_qede, pci_id_qede_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_qede, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_qede, "* igb_uio | uio_pci_generic | vfio");
+ RTE_PMD_REGISTER_PCI(net_qede_vf, rte_qedevf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_qede_vf, pci_id_qedevf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_qede_vf, "* igb_uio | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_qede_vf, "* igb_uio | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/qede/qede_rxtx.c dpdk-17.05/drivers/net/qede/qede_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/qede/qede_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/qede/qede_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1343,7 +1343,7 @@
+ 
+ 	if (bd1)
+ 		PMD_TX_LOG(INFO, txq,
+-			   "BD1: nbytes=%u nbds=%u bd_flags=%04x bf=%04x",
++			   "BD1: nbytes=%u nbds=%u bd_flags=04%x bf=%04x",
+ 			   rte_cpu_to_le_16(bd1->nbytes), bd1->data.nbds,
+ 			   bd1->data.bd_flags.bitfields,
+ 			   rte_cpu_to_le_16(bd1->data.bitfields));
+@@ -1542,7 +1542,7 @@
+ 
+ 		if (tunn_flg) {
+ 			/* First indicate its a tunnel pkt */
+-			bd1->data.bitfields |=
++			bd1->data.bd_flags.bitfields |=
+ 				ETH_TX_DATA_1ST_BD_TUNN_FLAG_MASK <<
+ 				ETH_TX_DATA_1ST_BD_TUNN_FLAG_SHIFT;
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/net/qede/qede_rxtx.h dpdk-17.05/drivers/net/qede/qede_rxtx.h
+--- dpdk-stable-17.05.2/drivers/net/qede/qede_rxtx.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/qede/qede_rxtx.h	2017-05-10 18:11:34.000000000 -0700
+@@ -134,8 +134,7 @@
+ 
+ #define QEDE_TX_OFFLOAD_MASK (QEDE_TX_CSUM_OFFLOAD_MASK | \
+ 			      PKT_TX_QINQ_PKT           | \
+-			      PKT_TX_VLAN_PKT		| \
+-			      PKT_TX_TUNNEL_VXLAN)
++			      PKT_TX_VLAN_PKT)
+ 
+ #define QEDE_TX_OFFLOAD_NOTSUP_MASK \
+ 	(PKT_TX_OFFLOAD_MASK ^ QEDE_TX_OFFLOAD_MASK)
+diff -uNr dpdk-stable-17.05.2/drivers/net/ring/rte_eth_ring.c dpdk-17.05/drivers/net/ring/rte_eth_ring.c
+--- dpdk-stable-17.05.2/drivers/net/ring/rte_eth_ring.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/ring/rte_eth_ring.c	2017-05-10 18:11:34.000000000 -0700
+@@ -230,7 +230,7 @@
+ 	uint32_t index __rte_unused,
+ 	uint32_t vmdq __rte_unused)
+ {
+-	return 0;
++	return -ENOTSUP;
+ }
+ 
+ static void
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_ev.c dpdk-17.05/drivers/net/sfc/base/ef10_ev.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_ev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/base/ef10_ev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -431,12 +431,7 @@
+ 	return (0);
+ 
+ fail1:
+-	/*
+-	 * EALREADY is not an error, but indicates that the MC has rebooted and
+-	 * that the EVQ has already been destroyed.
+-	 */
+-	if (rc != EALREADY)
+-		EFSYS_PROBE1(fail1, efx_rc_t, rc);
++	EFSYS_PROBE1(fail1, efx_rc_t, rc);
+ 
+ 	return (rc);
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_rx.c dpdk-17.05/drivers/net/sfc/base/ef10_rx.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_rx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/base/ef10_rx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -137,7 +137,7 @@
+ 
+ 	efx_mcdi_execute_quiet(enp, &req);
+ 
+-	if (req.emr_rc != 0) {
++	if ((req.emr_rc != 0) && (req.emr_rc != MC_CMD_ERR_EALREADY)) {
+ 		rc = req.emr_rc;
+ 		goto fail1;
+ 	}
+@@ -145,12 +145,7 @@
+ 	return (0);
+ 
+ fail1:
+-	/*
+-	 * EALREADY is not an error, but indicates that the MC has rebooted and
+-	 * that the RXQ has already been destroyed.
+-	 */
+-	if (rc != EALREADY)
+-		EFSYS_PROBE1(fail1, efx_rc_t, rc);
++	EFSYS_PROBE1(fail1, efx_rc_t, rc);
+ 
+ 	return (rc);
+ }
+@@ -807,14 +802,7 @@
+ 	return (0);
+ 
+ fail1:
+-	/*
+-	 * EALREADY is not an error, but indicates that the MC has rebooted and
+-	 * that the RXQ has already been destroyed. Callers need to know that
+-	 * the RXQ flush has completed to avoid waiting until timeout for a
+-	 * flush done event that will not be delivered.
+-	 */
+-	if (rc != EALREADY)
+-		EFSYS_PROBE1(fail1, efx_rc_t, rc);
++	EFSYS_PROBE1(fail1, efx_rc_t, rc);
+ 
+ 	return (rc);
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_tx.c dpdk-17.05/drivers/net/sfc/base/ef10_tx.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/base/ef10_tx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/base/ef10_tx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -148,7 +148,7 @@
+ 
+ 	efx_mcdi_execute_quiet(enp, &req);
+ 
+-	if (req.emr_rc != 0) {
++	if ((req.emr_rc != 0) && (req.emr_rc != MC_CMD_ERR_EALREADY)) {
+ 		rc = req.emr_rc;
+ 		goto fail1;
+ 	}
+@@ -156,12 +156,7 @@
+ 	return (0);
+ 
+ fail1:
+-	/*
+-	 * EALREADY is not an error, but indicates that the MC has rebooted and
+-	 * that the TXQ has already been destroyed.
+-	 */
+-	if (rc != EALREADY)
+-		EFSYS_PROBE1(fail1, efx_rc_t, rc);
++	EFSYS_PROBE1(fail1, efx_rc_t, rc);
+ 
+ 	return (rc);
+ }
+@@ -680,14 +675,7 @@
+ 	return (0);
+ 
+ fail1:
+-	/*
+-	 * EALREADY is not an error, but indicates that the MC has rebooted and
+-	 * that the TXQ has already been destroyed. Callers need to know that
+-	 * the TXQ flush has completed to avoid waiting until timeout for a
+-	 * flush done event that will not be delivered.
+-	 */
+-	if (rc != EALREADY)
+-		EFSYS_PROBE1(fail1, efx_rc_t, rc);
++	EFSYS_PROBE1(fail1, efx_rc_t, rc);
+ 
+ 	return (rc);
+ }
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/sfc_ethdev.c dpdk-17.05/drivers/net/sfc/sfc_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/sfc_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/sfc_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1632,7 +1632,7 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_sfc_efx, sfc_efx_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_sfc_efx, pci_id_sfc_efx_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_sfc_efx, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_sfc_efx, "* igb_uio | uio_pci_generic | vfio");
+ RTE_PMD_REGISTER_PARAM_STRING(net_sfc_efx,
+ 	SFC_KVARG_RX_DATAPATH "=" SFC_KVARG_VALUES_RX_DATAPATH " "
+ 	SFC_KVARG_TX_DATAPATH "=" SFC_KVARG_VALUES_TX_DATAPATH " "
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/sfc_port.c dpdk-17.05/drivers/net/sfc/sfc_port.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/sfc_port.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/sfc_port.c	2017-05-10 18:11:34.000000000 -0700
+@@ -242,18 +242,6 @@
+ 		}
+ 	}
+ 
+-	if ((port->mac_stats_update_period_ms != 0) &&
+-	    port->mac_stats_periodic_dma_supported) {
+-		/*
+-		 * Request an explicit MAC stats upload immediately to
+-		 * preclude bogus figures readback if the user decides
+-		 * to read stats before periodic DMA is really started
+-		 */
+-		rc = efx_mac_stats_upload(sa->nic, &port->mac_stats_dma_mem);
+-		if (rc != 0)
+-			goto fail_mac_stats_upload;
+-	}
+-
+ 	sfc_log_init(sa, "disable MAC drain");
+ 	rc = efx_mac_drain(sa->nic, B_FALSE);
+ 	if (rc != 0)
+@@ -274,7 +262,6 @@
+ 	(void)efx_mac_stats_periodic(sa->nic, &port->mac_stats_dma_mem,
+ 				     0, B_FALSE);
+ 
+-fail_mac_stats_upload:
+ fail_mac_stats_periodic:
+ fail_mcast_address_list_set:
+ fail_mac_filter_set:
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/sfc_tx.c dpdk-17.05/drivers/net/sfc/sfc_tx.c
+--- dpdk-stable-17.05.2/drivers/net/sfc/sfc_tx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/sfc_tx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -503,7 +503,7 @@
+ 	     (retry_count < SFC_TX_QFLUSH_ATTEMPTS);
+ 	     ++retry_count) {
+ 		if (efx_tx_qflush(txq->common) != 0) {
+-			txq->state |= SFC_TXQ_FLUSH_FAILED;
++			txq->state |= SFC_TXQ_FLUSHING;
+ 			break;
+ 		}
+ 
+diff -uNr dpdk-stable-17.05.2/drivers/net/sfc/sfc_tx.h dpdk-17.05/drivers/net/sfc/sfc_tx.h
+--- dpdk-stable-17.05.2/drivers/net/sfc/sfc_tx.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/sfc/sfc_tx.h	2017-05-10 18:11:34.000000000 -0700
+@@ -64,8 +64,6 @@
+ #define SFC_TXQ_FLUSHING	(1 << SFC_TXQ_FLUSHING_BIT)
+ 	SFC_TXQ_FLUSHED_BIT,
+ #define SFC_TXQ_FLUSHED		(1 << SFC_TXQ_FLUSHED_BIT)
+-	SFC_TXQ_FLUSH_FAILED_BIT,
+-#define SFC_TXQ_FLUSH_FAILED	(1 << SFC_TXQ_FLUSH_FAILED_BIT)
+ };
+ 
+ /**
+diff -uNr dpdk-stable-17.05.2/drivers/net/tap/tap_flow.c dpdk-17.05/drivers/net/tap/tap_flow.c
+--- dpdk-stable-17.05.2/drivers/net/tap/tap_flow.c	2018-03-20 23:12:11.000000000 -0700
++++ dpdk-17.05/drivers/net/tap/tap_flow.c	2017-05-10 18:11:34.000000000 -0700
+@@ -43,7 +43,6 @@
+ #include <tap_autoconf.h>
+ #include <tap_tcmsgs.h>
+ 
+-#if 0
+ #ifndef HAVE_TC_FLOWER
+ /*
+  * For kernels < 4.2, this enum is not defined. Runtime checks will be made to
+@@ -74,8 +73,6 @@
+ 	TCA_FLOWER_KEY_UDP_DST,         /* be16 */
+ };
+ #endif
+-#endif
+-
+ #ifndef HAVE_TC_VLAN_ID
+ enum {
+ 	/* TCA_FLOWER_FLAGS, */
+@@ -404,6 +401,9 @@
+ 	if (!flow)
+ 		return 0;
+ 	msg = &flow->msg;
++	if (spec->type & mask->type)
++		msg->t.tcm_info = TC_H_MAKE(msg->t.tcm_info,
++					    (spec->type & mask->type));
+ 	if (!is_zero_ether_addr(&spec->dst)) {
+ 		nlattr_add(&msg->nh, TCA_FLOWER_KEY_ETH_DST, ETHER_ADDR_LEN,
+ 			   &spec->dst.addr_bytes);
+@@ -508,6 +508,8 @@
+ 	msg = &flow->msg;
+ 	if (!info->eth_type)
+ 		info->eth_type = htons(ETH_P_IP);
++	if (!info->vlan)
++		msg->t.tcm_info = TC_H_MAKE(msg->t.tcm_info, htons(ETH_P_IP));
+ 	if (!spec)
+ 		return 0;
+ 	if (spec->hdr.dst_addr) {
+@@ -564,6 +566,8 @@
+ 	msg = &flow->msg;
+ 	if (!info->eth_type)
+ 		info->eth_type = htons(ETH_P_IPV6);
++	if (!info->vlan)
++		msg->t.tcm_info = TC_H_MAKE(msg->t.tcm_info, htons(ETH_P_IPV6));
+ 	if (!spec)
+ 		return 0;
+ 	if (memcmp(spec->hdr.dst_addr, empty_addr, 16)) {
+diff -uNr dpdk-stable-17.05.2/drivers/net/thunderx/nicvf_ethdev.c dpdk-17.05/drivers/net/thunderx/nicvf_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/thunderx/nicvf_ethdev.c	2018-03-20 23:14:08.000000000 -0700
++++ dpdk-17.05/drivers/net/thunderx/nicvf_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -326,15 +326,6 @@
+ 	stats->imissed += port_stats.rx_drop_l3_bcast;
+ 	stats->imissed += port_stats.rx_drop_l3_mcast;
+ 
+-	/** expanded by tsihang for vpp debuging. */
+-	stats->rx_drop_red = port_stats.rx_drop_red;
+-	stats->rx_drop_overrun = port_stats.rx_drop_overrun;
+-	stats->rx_drop_bcast = port_stats.rx_drop_bcast;
+-	stats->rx_drop_mcast = port_stats.rx_drop_mcast;
+-	stats->rx_drop_l3_bcast = port_stats.rx_drop_l3_bcast;
+-	stats->rx_drop_l3_mcast = port_stats.rx_drop_l3_mcast;
+-	
+-
+ 	stats->obytes = port_stats.tx_bytes_ok;
+ 	stats->opackets = port_stats.tx_ucast_frames_ok;
+ 	stats->opackets += port_stats.tx_bcast_frames_ok;
+@@ -2180,4 +2171,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_thunderx, rte_nicvf_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_thunderx, pci_id_nicvf_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_thunderx, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_thunderx, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/virtio/virtio_ethdev.c dpdk-17.05/drivers/net/virtio/virtio_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/virtio/virtio_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/virtio/virtio_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -424,7 +424,7 @@
+ 		}
+ 	}
+ 
+-	memset(mz->addr, 0, mz->len);
++	memset(mz->addr, 0, sizeof(mz->len));
+ 
+ 	vq->vq_ring_mem = mz->phys_addr;
+ 	vq->vq_ring_virt_mem = mz->addr;
+@@ -1678,12 +1678,6 @@
+ 			return ret;
+ 	}
+ 
+-	if (dev->data->dev_conf.intr_conf.rxq) {
+-		ret = virtio_init_device(dev, hw->req_guest_features);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	if (rxmode->hw_ip_checksum &&
+ 		!vtpci_with_feature(hw, VIRTIO_NET_F_GUEST_CSUM)) {
+ 		PMD_DRV_LOG(NOTICE,
+@@ -1949,4 +1943,4 @@
+ 
+ RTE_PMD_EXPORT_NAME(net_virtio, __COUNTER__);
+ RTE_PMD_REGISTER_PCI_TABLE(net_virtio, pci_id_virtio_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_virtio, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_virtio, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/virtio/virtio_pci.c dpdk-17.05/drivers/net/virtio/virtio_pci.c
+--- dpdk-stable-17.05.2/drivers/net/virtio/virtio_pci.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/virtio/virtio_pci.c	2017-05-10 18:11:34.000000000 -0700
+@@ -579,8 +579,6 @@
+ 	return base + offset;
+ }
+ 
+-#define PCI_MSIX_ENABLE 0x8000
+-
+ static int
+ virtio_read_caps(struct rte_pci_device *dev, struct virtio_hw *hw)
+ {
+@@ -607,17 +605,8 @@
+ 			break;
+ 		}
+ 
+-		if (cap.cap_vndr == PCI_CAP_ID_MSIX) {
+-			/* Transitional devices would also have this capability,
+-			 * that's why we also check if msix is enabled.
+-			 * 1st byte is cap ID; 2nd byte is the position of next
+-			 * cap; next two bytes are the flags.
+-			 */
+-			uint16_t flags = ((uint16_t *)&cap)[1];
+-
+-			if (flags & PCI_MSIX_ENABLE)
+-				hw->use_msix = 1;
+-		}
++		if (cap.cap_vndr == PCI_CAP_ID_MSIX)
++			hw->use_msix = 1;
+ 
+ 		if (cap.cap_vndr != PCI_CAP_ID_VNDR) {
+ 			PMD_INIT_LOG(DEBUG,
+diff -uNr dpdk-stable-17.05.2/drivers/net/virtio/virtio_user_ethdev.c dpdk-17.05/drivers/net/virtio/virtio_user_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/virtio/virtio_user_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/virtio/virtio_user_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -556,6 +556,7 @@
+ 	virtio_user_dev_uninit(dev);
+ 
+ 	rte_free(eth_dev->data->dev_private);
++	rte_free(eth_dev->data);
+ 	rte_eth_dev_release_port(eth_dev);
+ 
+ 	return 0;
+diff -uNr dpdk-stable-17.05.2/drivers/net/vmxnet3/vmxnet3_ethdev.c dpdk-17.05/drivers/net/vmxnet3/vmxnet3_ethdev.c
+--- dpdk-stable-17.05.2/drivers/net/vmxnet3/vmxnet3_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/vmxnet3/vmxnet3_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -995,10 +995,7 @@
+ 	struct vmxnet3_hw *hw = dev->data->dev_private;
+ 	uint32_t *vf_table = hw->shared->devRead.rxFilterConf.vfTable;
+ 
+-	if (dev->data->dev_conf.rxmode.hw_vlan_filter)
+-		memcpy(vf_table, hw->shadow_vfta, VMXNET3_VFT_TABLE_SIZE);
+-	else
+-		memset(vf_table, 0xff, VMXNET3_VFT_TABLE_SIZE);
++	memcpy(vf_table, hw->shadow_vfta, VMXNET3_VFT_TABLE_SIZE);
+ 	vmxnet3_dev_set_rxmode(hw, VMXNET3_RXM_PROMISC, 0);
+ 	VMXNET3_WRITE_BAR1_REG(hw, VMXNET3_REG_CMD,
+ 			       VMXNET3_CMD_UPDATE_VLAN_FILTERS);
+@@ -1129,4 +1126,4 @@
+ 
+ RTE_PMD_REGISTER_PCI(net_vmxnet3, rte_vmxnet3_pmd);
+ RTE_PMD_REGISTER_PCI_TABLE(net_vmxnet3, pci_id_vmxnet3_map);
+-RTE_PMD_REGISTER_KMOD_DEP(net_vmxnet3, "* igb_uio | uio_pci_generic | vfio-pci");
++RTE_PMD_REGISTER_KMOD_DEP(net_vmxnet3, "* igb_uio | uio_pci_generic | vfio");
+diff -uNr dpdk-stable-17.05.2/drivers/net/vmxnet3/vmxnet3_rxtx.c dpdk-17.05/drivers/net/vmxnet3/vmxnet3_rxtx.c
+--- dpdk-stable-17.05.2/drivers/net/vmxnet3/vmxnet3_rxtx.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/drivers/net/vmxnet3/vmxnet3_rxtx.c	2017-05-10 18:11:34.000000000 -0700
+@@ -800,12 +800,6 @@
+ 				   (int)(rcd - (struct Vmxnet3_RxCompDesc *)
+ 					 rxq->comp_ring.base), rcd->rxdIdx);
+ 			rte_pktmbuf_free_seg(rxm);
+-			if (rxq->start_seg) {
+-				struct rte_mbuf *start = rxq->start_seg;
+-
+-				rxq->start_seg = NULL;
+-				rte_pktmbuf_free(start);
+-			}
+ 			goto rcd_done;
+ 		}
+ 
+diff -uNr dpdk-stable-17.05.2/examples/l2fwd-crypto/main.c dpdk-17.05/examples/l2fwd-crypto/main.c
+--- dpdk-stable-17.05.2/examples/l2fwd-crypto/main.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/examples/l2fwd-crypto/main.c	2017-05-10 18:11:34.000000000 -0700
+@@ -842,8 +842,7 @@
+ 		" (0 to disable, 10 default, 86400 maximum)\n"
+ 
+ 		"  --cdev_type HW / SW / ANY\n"
+-		"  --chain HASH_CIPHER / CIPHER_HASH / CIPHER_ONLY /"
+-		" HASH_ONLY\n"
++		"  --chain HASH_CIPHER / CIPHER_HASH\n"
+ 
+ 		"  --cipher_algo ALGO\n"
+ 		"  --cipher_op ENCRYPT / DECRYPT\n"
+@@ -1263,7 +1262,7 @@
+ {
+ 	printf("\n---- Authentication information ---\n");
+ 	printf("Algorithm: %s\n",
+-		rte_crypto_auth_algorithm_strings[options->auth_xform.auth.algo]);
++		rte_crypto_auth_algorithm_strings[options->auth_xform.cipher.algo]);
+ 	rte_hexdump(stdout, "Auth key:",
+ 			options->auth_xform.auth.key.data,
+ 			options->auth_xform.auth.key.length);
+@@ -1373,7 +1372,7 @@
+ 
+ 	l2fwd_crypto_default_options(options);
+ 
+-	while ((opt = getopt_long(argc, argvopt, "p:q:sT:", lgopts,
++	while ((opt = getopt_long(argc, argvopt, "p:q:st:", lgopts,
+ 			&option_index)) != EOF) {
+ 		switch (opt) {
+ 		/* long options */
+diff -uNr dpdk-stable-17.05.2/examples/l3fwd/l3fwd_em.c dpdk-17.05/examples/l3fwd/l3fwd_em.c
+--- dpdk-stable-17.05.2/examples/l3fwd/l3fwd_em.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/examples/l3fwd/l3fwd_em.c	2017-05-10 18:11:34.000000000 -0700
+@@ -614,7 +614,7 @@
+ 				packet_type |= RTE_PTYPE_L4_UDP;
+ 		} else
+ 			packet_type |= RTE_PTYPE_L3_IPV4_EXT;
+-	} else if (ether_type == rte_cpu_to_be_16(ETHER_TYPE_IPv6)) {
++	} else if (ether_type == rte_cpu_to_be_16(ETHER_TYPE_IPv4)) {
+ 		ipv6_hdr = (struct ipv6_hdr *)l3;
+ 		if (ipv6_hdr->proto == IPPROTO_TCP)
+ 			packet_type |= RTE_PTYPE_L3_IPV6 | RTE_PTYPE_L4_TCP;
+diff -uNr dpdk-stable-17.05.2/examples/qos_sched/main.h dpdk-17.05/examples/qos_sched/main.h
+--- dpdk-stable-17.05.2/examples/qos_sched/main.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/examples/qos_sched/main.h	2017-05-10 18:11:34.000000000 -0700
+@@ -69,13 +69,8 @@
+ #define BURST_TX_DRAIN_US 100
+ 
+ #ifndef APP_MAX_LCORE
+-#if (RTE_MAX_LCORE > 64)
+ #define APP_MAX_LCORE 64
+-#else
+-#define APP_MAX_LCORE RTE_MAX_LCORE
+ #endif
+-#endif
+-
+ #define MAX_DATA_STREAMS (APP_MAX_LCORE/2)
+ #define MAX_SCHED_SUBPORTS		8
+ #define MAX_SCHED_PIPES		4096
+diff -uNr dpdk-stable-17.05.2/examples/vhost/virtio_net.c dpdk-17.05/examples/vhost/virtio_net.c
+--- dpdk-stable-17.05.2/examples/vhost/virtio_net.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/examples/vhost/virtio_net.c	2017-05-10 18:11:34.000000000 -0700
+@@ -350,9 +350,6 @@
+ 	count = RTE_MIN(count, MAX_PKT_BURST);
+ 	count = RTE_MIN(count, free_entries);
+ 
+-	if (unlikely(count == 0))
+-		return 0;
+-
+ 	/*
+ 	 * Retrieve all of the head indexes first and pre-update used entries
+ 	 * to avoid caching issues.
+@@ -388,6 +385,8 @@
+ 		}
+ 
+ 	}
++	if (!i)
++		return 0;
+ 
+ 	queue->last_avail_idx += i;
+ 	queue->last_used_idx += i;
+diff -uNr dpdk-stable-17.05.2/lib/librte_cmdline/cmdline_parse.c dpdk-17.05/lib/librte_cmdline/cmdline_parse.c
+--- dpdk-stable-17.05.2/lib/librte_cmdline/cmdline_parse.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_cmdline/cmdline_parse.c	2017-05-10 18:11:34.000000000 -0700
+@@ -139,21 +139,6 @@
+ 	return i;
+ }
+ 
+-/** Retrieve either static or dynamic token at a given index. */
+-static cmdline_parse_token_hdr_t *
+-get_token(cmdline_parse_inst_t *inst, unsigned int index)
+-{
+-	cmdline_parse_token_hdr_t *token_p;
+-
+-	/* check presence of static tokens first */
+-	if (inst->tokens[0] || !inst->f)
+-		return inst->tokens[index];
+-	/* generate dynamic token */
+-	token_p = NULL;
+-	inst->f(&token_p, NULL, &inst->tokens[index]);
+-	return token_p;
+-}
+-
+ /**
+  * try to match the buffer with an instruction (only the first
+  * nb_match_token tokens if != 0). Return 0 if we match all the
+@@ -161,20 +146,27 @@
+  */
+ static int
+ match_inst(cmdline_parse_inst_t *inst, const char *buf,
+-	   unsigned int nb_match_token, void *resbuf, unsigned resbuf_size)
++	   unsigned int nb_match_token, void *resbuf, unsigned resbuf_size,
++	   cmdline_parse_token_hdr_t
++		*(*dyn_tokens)[CMDLINE_PARSE_DYNAMIC_TOKENS])
+ {
++	unsigned int token_num=0;
+ 	cmdline_parse_token_hdr_t * token_p;
+ 	unsigned int i=0;
+ 	int n = 0;
+ 	struct cmdline_token_hdr token_hdr;
+ 
+-	/* check if we match all tokens of inst */
+-	while (!nb_match_token || i < nb_match_token) {
+-		token_p = get_token(inst, i);
+-		if (!token_p)
+-			break;
++	token_p = inst->tokens[token_num];
++	if (!token_p && dyn_tokens && inst->f) {
++		if (!(*dyn_tokens)[0])
++			inst->f(&(*dyn_tokens)[0], NULL, dyn_tokens);
++		token_p = (*dyn_tokens)[0];
++	}
++	if (token_p)
+ 		memcpy(&token_hdr, token_p, sizeof(token_hdr));
+ 
++	/* check if we match all tokens of inst */
++	while (token_p && (!nb_match_token || i<nb_match_token)) {
+ 		debug_printf("TK\n");
+ 		/* skip spaces */
+ 		while (isblank2(*buf)) {
+@@ -209,6 +201,21 @@
+ 		debug_printf("TK parsed (len=%d)\n", n);
+ 		i++;
+ 		buf += n;
++
++		token_num ++;
++		if (!inst->tokens[0]) {
++			if (token_num < (CMDLINE_PARSE_DYNAMIC_TOKENS - 1)) {
++				if (!(*dyn_tokens)[token_num])
++					inst->f(&(*dyn_tokens)[token_num],
++						NULL,
++						dyn_tokens);
++				token_p = (*dyn_tokens)[token_num];
++			} else
++				token_p = NULL;
++		} else
++			token_p = inst->tokens[token_num];
++		if (token_p)
++			memcpy(&token_hdr, token_p, sizeof(token_hdr));
+ 	}
+ 
+ 	/* does not match */
+@@ -252,6 +259,7 @@
+ 		char buf[CMDLINE_PARSE_RESULT_BUFSIZE];
+ 		long double align; /* strong alignment constraint for buf */
+ 	} result, tmp_result;
++	cmdline_parse_token_hdr_t *dyn_tokens[CMDLINE_PARSE_DYNAMIC_TOKENS];
+ 	void (*f)(void *, struct cmdline *, void *) = NULL;
+ 	void *data = NULL;
+ 	int comment = 0;
+@@ -268,6 +276,7 @@
+ 		return CMDLINE_PARSE_BAD_ARGS;
+ 
+ 	ctx = cl->ctx;
++	memset(&dyn_tokens, 0, sizeof(dyn_tokens));
+ 
+ 	/*
+ 	 * - look if the buffer contains at least one line
+@@ -313,7 +322,7 @@
+ 
+ 		/* fully parsed */
+ 		tok = match_inst(inst, buf, 0, tmp_result.buf,
+-				 sizeof(tmp_result.buf));
++				 sizeof(tmp_result.buf), &dyn_tokens);
+ 
+ 		if (tok > 0) /* we matched at least one token */
+ 			err = CMDLINE_PARSE_BAD_ARGS;
+@@ -371,6 +380,7 @@
+ 	cmdline_parse_token_hdr_t *token_p;
+ 	struct cmdline_token_hdr token_hdr;
+ 	char tmpbuf[CMDLINE_BUFFER_SIZE], comp_buf[CMDLINE_BUFFER_SIZE];
++	cmdline_parse_token_hdr_t *dyn_tokens[CMDLINE_PARSE_DYNAMIC_TOKENS];
+ 	unsigned int partial_tok_len;
+ 	int comp_len = -1;
+ 	int tmp_len = -1;
+@@ -390,6 +400,7 @@
+ 
+ 	debug_printf("%s called\n", __func__);
+ 	memset(&token_hdr, 0, sizeof(token_hdr));
++	memset(&dyn_tokens, 0, sizeof(dyn_tokens));
+ 
+ 	/* count the number of complete token to parse */
+ 	for (i=0 ; buf[i] ; i++) {
+@@ -413,11 +424,23 @@
+ 		while (inst) {
+ 			/* parse the first tokens of the inst */
+ 			if (nb_token &&
+-			    match_inst(inst, buf, nb_token, NULL, 0))
++			    match_inst(inst, buf, nb_token, NULL, 0,
++				       &dyn_tokens))
+ 				goto next;
+ 
+ 			debug_printf("instruction match\n");
+-			token_p = get_token(inst, nb_token);
++			if (!inst->tokens[0]) {
++				if (nb_token <
++				    (CMDLINE_PARSE_DYNAMIC_TOKENS - 1)) {
++					if (!dyn_tokens[nb_token])
++						inst->f(&dyn_tokens[nb_token],
++							NULL,
++							&dyn_tokens);
++					token_p = dyn_tokens[nb_token];
++				} else
++					token_p = NULL;
++			} else
++				token_p = inst->tokens[nb_token];
+ 			if (token_p)
+ 				memcpy(&token_hdr, token_p, sizeof(token_hdr));
+ 
+@@ -508,10 +531,20 @@
+ 		inst = ctx[inst_num];
+ 
+ 		if (nb_token &&
+-		    match_inst(inst, buf, nb_token, NULL, 0))
++		    match_inst(inst, buf, nb_token, NULL, 0, &dyn_tokens))
+ 			goto next2;
+ 
+-		token_p = get_token(inst, nb_token);
++		if (!inst->tokens[0]) {
++			if (nb_token < (CMDLINE_PARSE_DYNAMIC_TOKENS - 1)) {
++				if (!dyn_tokens[nb_token])
++					inst->f(&dyn_tokens[nb_token],
++						NULL,
++						&dyn_tokens);
++				token_p = dyn_tokens[nb_token];
++			} else
++				token_p = NULL;
++		} else
++			token_p = inst->tokens[nb_token];
+ 		if (token_p)
+ 			memcpy(&token_hdr, token_p, sizeof(token_hdr));
+ 
+diff -uNr dpdk-stable-17.05.2/lib/librte_cmdline/cmdline_parse.h dpdk-17.05/lib/librte_cmdline/cmdline_parse.h
+--- dpdk-stable-17.05.2/lib/librte_cmdline/cmdline_parse.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_cmdline/cmdline_parse.h	2017-05-10 18:11:34.000000000 -0700
+@@ -83,6 +83,9 @@
+ /* maximum buffer size for parsed result */
+ #define CMDLINE_PARSE_RESULT_BUFSIZE 8192
+ 
++/* maximum number of dynamic tokens */
++#define CMDLINE_PARSE_DYNAMIC_TOKENS 128
++
+ /**
+  * Stores a pointer to the ops struct, and the offset: the place to
+  * write the parsed result in the destination structure.
+@@ -134,53 +137,20 @@
+  * When no tokens are defined (tokens[0] == NULL), they are retrieved
+  * dynamically by calling f() as follows:
+  *
+- * @code
+- *
+- * f((struct cmdline_token_hdr **)&token_p,
+- *   NULL,
+- *   (struct cmdline_token_hdr **)&inst->tokens[num]);
+- *
+- * @endcode
++ *  f((struct cmdline_token_hdr **)&token_hdr,
++ *    NULL,
++ *    (struct cmdline_token_hdr *[])tokens));
+  *
+  * The address of the resulting token is expected at the location pointed by
+  * the first argument. Can be set to NULL to end the list.
+  *
+  * The cmdline argument (struct cmdline *) is always NULL.
+  *
+- * The last argument points to the inst->tokens[] entry to retrieve, which
+- * is not necessarily inside allocated memory and should neither be read nor
+- * written. Its sole purpose is to deduce the token entry index of interest
+- * as described in the example below.
+- *
+- * Note about constraints:
+- *
+- * - Only the address of these tokens is dynamic, their storage should be
+- *   static like normal tokens.
+- * - Dynamic token lists that need to maintain an internal context (e.g. in
+- *   order to determine the next token) must store it statically also. This
+- *   context must be reinitialized when the first token is requested, that
+- *   is, when &inst->tokens[0] is provided as the third argument.
+- * - Dynamic token lists must be NULL-terminated to generate usable
+- *   commands.
+- *
+- * @code
+- *
+- * // Assuming first and third arguments are respectively named "token_p"
+- * // and "token":
+- *
+- * int index = token - inst->tokens;
+- *
+- * if (!index) {
+- *     [...] // Clean up internal context if any.
+- * }
+- * [...] // Then set up dyn_token according to index.
+- *
+- * if (no_more_tokens)
+- *     *token_p = NULL;
+- * else
+- *     *token_p = &dyn_token;
++ * The last argument points to the NULL-terminated list of dynamic tokens
++ * defined so far. Since token_hdr points to an index of that list, the
++ * current index can be derived as follows:
+  *
+- * @endcode
++ *  int index = token_hdr - &(*tokens)[0];
+  */
+ struct cmdline_inst {
+ 	/* f(parsed_struct, data) */
+diff -uNr dpdk-stable-17.05.2/lib/librte_cryptodev/rte_cryptodev.c dpdk-17.05/lib/librte_cryptodev/rte_cryptodev.c
+--- dpdk-stable-17.05.2/lib/librte_cryptodev/rte_cryptodev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_cryptodev/rte_cryptodev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -523,7 +523,7 @@
+ }
+ 
+ uint8_t
+-rte_cryptodev_devices_get(const char *driver_name, uint8_t *devices,
++rte_cryptodev_devices_get(const char *dev_name, uint8_t *devices,
+ 	uint8_t nb_devices)
+ {
+ 	uint8_t i, count = 0;
+@@ -538,10 +538,10 @@
+ 
+ 			if (drv)
+ 				cmp = strncmp(drv->pci_drv.driver.name,
+-					driver_name, strlen(driver_name));
++						dev_name, strlen(dev_name));
+ 			else
+ 				cmp = strncmp(devs[i].data->name,
+-					driver_name, strlen(driver_name));
++						dev_name, strlen(dev_name));
+ 
+ 			if (cmp == 0)
+ 				devices[count++] = devs[i].data->dev_id;
+@@ -1032,8 +1032,8 @@
+ 		return;
+ 	}
+ 
+-	(*dev->dev_ops->dev_stop)(dev);
+ 	dev->data->dev_started = 0;
++	(*dev->dev_ops->dev_stop)(dev);
+ }
+ 
+ int
+diff -uNr dpdk-stable-17.05.2/lib/librte_cryptodev/rte_cryptodev.h dpdk-17.05/lib/librte_cryptodev/rte_cryptodev.h
+--- dpdk-stable-17.05.2/lib/librte_cryptodev/rte_cryptodev.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_cryptodev/rte_cryptodev.h	2017-05-10 18:11:34.000000000 -0700
+@@ -463,10 +463,9 @@
+ rte_cryptodev_count_devtype(enum rte_cryptodev_type type);
+ 
+ /**
+- * Get number and identifiers of attached crypto devices that
+- * use the same crypto driver.
++ * Get number and identifiers of attached crypto device.
+  *
+- * @param	driver_name	driver name.
++ * @param	dev_name	device name.
+  * @param	devices		output devices identifiers.
+  * @param	nb_devices	maximal number of devices.
+  *
+@@ -474,7 +473,7 @@
+  *   Returns number of attached crypto device.
+  */
+ uint8_t
+-rte_cryptodev_devices_get(const char *driver_name, uint8_t *devices,
++rte_cryptodev_devices_get(const char *dev_name, uint8_t *devices,
+ 		uint8_t nb_devices);
+ /*
+  * Return the NUMA socket to which a device is connected
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/bsdapp/contigmem/contigmem.c dpdk-17.05/lib/librte_eal/bsdapp/contigmem/contigmem.c
+--- dpdk-stable-17.05.2/lib/librte_eal/bsdapp/contigmem/contigmem.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/bsdapp/contigmem/contigmem.c	2017-05-10 18:11:34.000000000 -0700
+@@ -50,37 +50,24 @@
+ 
+ #include <vm/vm.h>
+ #include <vm/pmap.h>
+-#include <vm/vm_param.h>
+ #include <vm/vm_object.h>
+ #include <vm/vm_page.h>
+ #include <vm/vm_pager.h>
+-#include <vm/vm_phys.h>
+-
+-struct contigmem_buffer {
+-	void           *addr;
+-	int             refcnt;
+-	struct mtx      mtx;
+-};
+-
+-struct contigmem_vm_handle {
+-	int             buffer_index;
+-};
+ 
+ static int              contigmem_load(void);
+ static int              contigmem_unload(void);
+ static int              contigmem_physaddr(SYSCTL_HANDLER_ARGS);
+ 
++static d_mmap_t         contigmem_mmap;
+ static d_mmap_single_t  contigmem_mmap_single;
+ static d_open_t         contigmem_open;
+-static d_close_t        contigmem_close;
+ 
+ static int              contigmem_num_buffers = RTE_CONTIGMEM_DEFAULT_NUM_BUFS;
+ static int64_t          contigmem_buffer_size = RTE_CONTIGMEM_DEFAULT_BUF_SIZE;
+ 
+ static eventhandler_tag contigmem_eh_tag;
+-static struct contigmem_buffer contigmem_buffers[RTE_CONTIGMEM_MAX_NUM_BUFS];
++static void            *contigmem_buffers[RTE_CONTIGMEM_MAX_NUM_BUFS];
+ static struct cdev     *contigmem_cdev = NULL;
+-static int              contigmem_refcnt;
+ 
+ TUNABLE_INT("hw.contigmem.num_buffers", &contigmem_num_buffers);
+ TUNABLE_QUAD("hw.contigmem.buffer_size", &contigmem_buffer_size);
+@@ -91,8 +78,6 @@
+ 	&contigmem_num_buffers, 0, "Number of contigmem buffers allocated");
+ SYSCTL_QUAD(_hw_contigmem, OID_AUTO, buffer_size, CTLFLAG_RD,
+ 	&contigmem_buffer_size, 0, "Size of each contiguous buffer");
+-SYSCTL_INT(_hw_contigmem, OID_AUTO, num_references, CTLFLAG_RD,
+-	&contigmem_refcnt, 0, "Number of references to contigmem");
+ 
+ static SYSCTL_NODE(_hw_contigmem, OID_AUTO, physaddr, CTLFLAG_RD, 0,
+ 	"physaddr");
+@@ -129,49 +114,42 @@
+ static struct cdevsw contigmem_ops = {
+ 	.d_name         = "contigmem",
+ 	.d_version      = D_VERSION,
+-	.d_flags        = D_TRACKCLOSE,
++	.d_mmap         = contigmem_mmap,
+ 	.d_mmap_single  = contigmem_mmap_single,
+ 	.d_open         = contigmem_open,
+-	.d_close        = contigmem_close,
+ };
+ 
+ static int
+ contigmem_load()
+ {
+ 	char index_string[8], description[32];
+-	int  i, error = 0;
+-	void *addr;
++	int  i;
+ 
+ 	if (contigmem_num_buffers > RTE_CONTIGMEM_MAX_NUM_BUFS) {
+ 		printf("%d buffers requested is greater than %d allowed\n",
+ 				contigmem_num_buffers, RTE_CONTIGMEM_MAX_NUM_BUFS);
+-		error = EINVAL;
+-		goto error;
++		return EINVAL;
+ 	}
+ 
+ 	if (contigmem_buffer_size < PAGE_SIZE ||
+ 			(contigmem_buffer_size & (contigmem_buffer_size - 1)) != 0) {
+ 		printf("buffer size 0x%lx is not greater than PAGE_SIZE and "
+ 				"power of two\n", contigmem_buffer_size);
+-		error = EINVAL;
+-		goto error;
++		return EINVAL;
+ 	}
+ 
+ 	for (i = 0; i < contigmem_num_buffers; i++) {
+-		addr = contigmalloc(contigmem_buffer_size, M_CONTIGMEM, M_ZERO,
+-			0, BUS_SPACE_MAXADDR, contigmem_buffer_size, 0);
+-		if (addr == NULL) {
++		contigmem_buffers[i] =
++				contigmalloc(contigmem_buffer_size, M_CONTIGMEM, M_ZERO, 0,
++			BUS_SPACE_MAXADDR, contigmem_buffer_size, 0);
++
++		if (contigmem_buffers[i] == NULL) {
+ 			printf("contigmalloc failed for buffer %d\n", i);
+-			error = ENOMEM;
+-			goto error;
++			return ENOMEM;
+ 		}
+ 
+-		printf("%2u: virt=%p phys=%p\n", i, addr,
+-			(void *)pmap_kextract((vm_offset_t)addr));
+-
+-		mtx_init(&contigmem_buffers[i].mtx, "contigmem", NULL, MTX_DEF);
+-		contigmem_buffers[i].addr = addr;
+-		contigmem_buffers[i].refcnt = 0;
++		printf("%2u: virt=%p phys=%p\n", i, contigmem_buffers[i],
++				(void *)pmap_kextract((vm_offset_t)contigmem_buffers[i]));
+ 
+ 		snprintf(index_string, sizeof(index_string), "%d", i);
+ 		snprintf(description, sizeof(description),
+@@ -187,17 +165,6 @@
+ 			GID_WHEEL, 0600, "contigmem");
+ 
+ 	return 0;
+-
+-error:
+-	for (i = 0; i < contigmem_num_buffers; i++) {
+-		if (contigmem_buffers[i].addr != NULL)
+-			contigfree(contigmem_buffers[i].addr,
+-				contigmem_buffer_size, M_CONTIGMEM);
+-		if (mtx_initialized(&contigmem_buffers[i].mtx))
+-			mtx_destroy(&contigmem_buffers[i].mtx);
+-	}
+-
+-	return error;
+ }
+ 
+ static int
+@@ -205,22 +172,16 @@
+ {
+ 	int i;
+ 
+-	if (contigmem_refcnt > 0)
+-		return EBUSY;
+-
+ 	if (contigmem_cdev != NULL)
+ 		destroy_dev(contigmem_cdev);
+ 
+ 	if (contigmem_eh_tag != NULL)
+ 		EVENTHANDLER_DEREGISTER(process_exit, contigmem_eh_tag);
+ 
+-	for (i = 0; i < RTE_CONTIGMEM_MAX_NUM_BUFS; i++) {
+-		if (contigmem_buffers[i].addr != NULL)
+-			contigfree(contigmem_buffers[i].addr,
+-				contigmem_buffer_size, M_CONTIGMEM);
+-		if (mtx_initialized(&contigmem_buffers[i].mtx))
+-			mtx_destroy(&contigmem_buffers[i].mtx);
+-	}
++	for (i = 0; i < RTE_CONTIGMEM_MAX_NUM_BUFS; i++)
++		if (contigmem_buffers[i] != NULL)
++			contigfree(contigmem_buffers[i], contigmem_buffer_size,
++					M_CONTIGMEM);
+ 
+ 	return 0;
+ }
+@@ -231,7 +192,7 @@
+ 	uint64_t	physaddr;
+ 	int		index = (int)(uintptr_t)arg1;
+ 
+-	physaddr = (uint64_t)vtophys(contigmem_buffers[index].addr);
++	physaddr = (uint64_t)vtophys(contigmem_buffers[index]);
+ 	return sysctl_handle_64(oidp, &physaddr, 0, req);
+ }
+ 
+@@ -239,121 +200,22 @@
+ contigmem_open(struct cdev *cdev, int fflags, int devtype,
+ 		struct thread *td)
+ {
+-
+-	atomic_add_int(&contigmem_refcnt, 1);
+-
+ 	return 0;
+ }
+ 
+ static int
+-contigmem_close(struct cdev *cdev, int fflags, int devtype,
+-		struct thread *td)
++contigmem_mmap(struct cdev *cdev, vm_ooffset_t offset, vm_paddr_t *paddr,
++		int prot, vm_memattr_t *memattr)
+ {
+ 
+-	atomic_subtract_int(&contigmem_refcnt, 1);
+-
+-	return 0;
+-}
+-
+-static int
+-contigmem_cdev_pager_ctor(void *handle, vm_ooffset_t size, vm_prot_t prot,
+-		vm_ooffset_t foff, struct ucred *cred, u_short *color)
+-{
+-	struct contigmem_vm_handle *vmh = handle;
+-	struct contigmem_buffer *buf;
+-
+-	buf = &contigmem_buffers[vmh->buffer_index];
+-
+-	atomic_add_int(&contigmem_refcnt, 1);
+-
+-	mtx_lock(&buf->mtx);
+-	if (buf->refcnt == 0)
+-		memset(buf->addr, 0, contigmem_buffer_size);
+-	buf->refcnt++;
+-	mtx_unlock(&buf->mtx);
+-
++	*paddr = offset;
+ 	return 0;
+ }
+ 
+-static void
+-contigmem_cdev_pager_dtor(void *handle)
+-{
+-	struct contigmem_vm_handle *vmh = handle;
+-	struct contigmem_buffer *buf;
+-
+-	buf = &contigmem_buffers[vmh->buffer_index];
+-
+-	mtx_lock(&buf->mtx);
+-	buf->refcnt--;
+-	mtx_unlock(&buf->mtx);
+-
+-	free(vmh, M_CONTIGMEM);
+-
+-	atomic_subtract_int(&contigmem_refcnt, 1);
+-}
+-
+-static int
+-contigmem_cdev_pager_fault(vm_object_t object, vm_ooffset_t offset, int prot,
+-		vm_page_t *mres)
+-{
+-	vm_paddr_t paddr;
+-	vm_page_t m_paddr, page;
+-	vm_memattr_t memattr, memattr1;
+-
+-	memattr = object->memattr;
+-
+-	VM_OBJECT_WUNLOCK(object);
+-
+-	paddr = offset;
+-
+-	m_paddr = vm_phys_paddr_to_vm_page(paddr);
+-	if (m_paddr != NULL) {
+-		memattr1 = pmap_page_get_memattr(m_paddr);
+-		if (memattr1 != memattr)
+-			memattr = memattr1;
+-	}
+-
+-	if (((*mres)->flags & PG_FICTITIOUS) != 0) {
+-		/*
+-		 * If the passed in result page is a fake page, update it with
+-		 * the new physical address.
+-		 */
+-		page = *mres;
+-		VM_OBJECT_WLOCK(object);
+-		vm_page_updatefake(page, paddr, memattr);
+-	} else {
+-		vm_page_t mret;
+-		/*
+-		 * Replace the passed in reqpage page with our own fake page and
+-		 * free up the original page.
+-		 */
+-		page = vm_page_getfake(paddr, memattr);
+-		VM_OBJECT_WLOCK(object);
+-		mret = vm_page_replace(page, object, (*mres)->pindex);
+-		KASSERT(mret == *mres,
+-		    ("invalid page replacement, old=%p, ret=%p", *mres, mret));
+-		vm_page_lock(mret);
+-		vm_page_free(mret);
+-		vm_page_unlock(mret);
+-		*mres = page;
+-	}
+-
+-	page->valid = VM_PAGE_BITS_ALL;
+-
+-	return VM_PAGER_OK;
+-}
+-
+-static struct cdev_pager_ops contigmem_cdev_pager_ops = {
+-	.cdev_pg_ctor = contigmem_cdev_pager_ctor,
+-	.cdev_pg_dtor = contigmem_cdev_pager_dtor,
+-	.cdev_pg_fault = contigmem_cdev_pager_fault,
+-};
+-
+ static int
+ contigmem_mmap_single(struct cdev *cdev, vm_ooffset_t *offset, vm_size_t size,
+ 		struct vm_object **obj, int nprot)
+ {
+-	struct contigmem_vm_handle *vmh;
+ 	uint64_t buffer_index;
+ 
+ 	/*
+@@ -365,17 +227,10 @@
+ 	if (buffer_index >= contigmem_num_buffers)
+ 		return EINVAL;
+ 
+-	if (size > contigmem_buffer_size)
+-		return EINVAL;
+-
+-	vmh = malloc(sizeof(*vmh), M_CONTIGMEM, M_NOWAIT | M_ZERO);
+-	if (vmh == NULL)
+-		return ENOMEM;
+-	vmh->buffer_index = buffer_index;
+-
+-	*offset = (vm_ooffset_t)vtophys(contigmem_buffers[buffer_index].addr);
+-	*obj = cdev_pager_allocate(vmh, OBJT_DEVICE, &contigmem_cdev_pager_ops,
+-			size, nprot, *offset, curthread->td_ucred);
++	memset(contigmem_buffers[buffer_index], 0, contigmem_buffer_size);
++	*offset = (vm_ooffset_t)vtophys(contigmem_buffers[buffer_index]);
++	*obj = vm_pager_allocate(OBJT_DEVICE, cdev, size, nprot, *offset,
++			curthread->td_ucred);
+ 
+ 	return 0;
+ }
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/common/eal_common_proc.c dpdk-17.05/lib/librte_eal/common/eal_common_proc.c
+--- dpdk-stable-17.05.2/lib/librte_eal/common/eal_common_proc.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/common/eal_common_proc.c	2017-05-10 18:11:34.000000000 -0700
+@@ -46,10 +46,10 @@
+ 	if (config_file_path)
+ 		config_fd = open(config_file_path, O_RDONLY);
+ 	else {
+-		const char *path;
+-
+-		path = eal_runtime_config_path();
+-		config_fd = open(path, O_RDONLY);
++		char default_path[PATH_MAX+1];
++		snprintf(default_path, PATH_MAX, RUNTIME_CONFIG_FMT,
++			 default_config_dir, "rte");
++		config_fd = open(default_path, O_RDONLY);
+ 	}
+ 	if (config_fd < 0)
+ 		return 0;
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/common/include/rte_malloc.h dpdk-17.05/lib/librte_eal/common/include/rte_malloc.h
+--- dpdk-stable-17.05.2/lib/librte_eal/common/include/rte_malloc.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/common/include/rte_malloc.h	2017-05-10 18:11:34.000000000 -0700
+@@ -329,7 +329,7 @@
+  * @param addr
+  *   Adress obtained from a previous rte_malloc call
+  * @return
+- *   RTE_BAD_PHYS_ADDR on error
++ *   NULL on error
+  *   otherwise return physical address of the buffer
+  */
+ phys_addr_t
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/common/include/rte_version.h dpdk-17.05/lib/librte_eal/common/include/rte_version.h
+--- dpdk-stable-17.05.2/lib/librte_eal/common/include/rte_version.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/common/include/rte_version.h	2017-05-10 18:11:34.000000000 -0700
+@@ -66,7 +66,7 @@
+ /**
+  * Patch level number i.e. the z in yy.mm.z
+  */
+-#define RTE_VER_MINOR 2
++#define RTE_VER_MINOR 0
+ 
+ /**
+  * Extra string to be appended to version number
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/common/rte_malloc.c dpdk-17.05/lib/librte_eal/common/rte_malloc.c
+--- dpdk-stable-17.05.2/lib/librte_eal/common/rte_malloc.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/common/rte_malloc.c	2017-05-10 18:11:34.000000000 -0700
+@@ -253,8 +253,6 @@
+ {
+ 	const struct malloc_elem *elem = malloc_elem_from_data(addr);
+ 	if (elem == NULL)
+-		return RTE_BAD_PHYS_ADDR;
+-	if (elem->ms->phys_addr == RTE_BAD_PHYS_ADDR)
+-		return RTE_BAD_PHYS_ADDR;
++		return 0;
+ 	return elem->ms->phys_addr + ((uintptr_t)addr - (uintptr_t)elem->ms->addr);
+ }
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/linuxapp/eal/eal_memory.c dpdk-17.05/lib/librte_eal/linuxapp/eal/eal_memory.c
+--- dpdk-stable-17.05.2/lib/librte_eal/linuxapp/eal/eal_memory.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/linuxapp/eal/eal_memory.c	2017-05-10 18:11:34.000000000 -0700
+@@ -137,13 +137,6 @@
+ 	if (rte_xen_dom0_supported())
+ 		return;
+ 
+-	if (!rte_eal_has_hugepages()) {
+-		RTE_LOG(ERR, EAL,
+-			"Started without hugepages support, physical addresses not available\n");
+-		phys_addrs_available = false;
+-		return;
+-	}
+-
+ 	physaddr = rte_mem_virt2phy(&tmp);
+ 	if (physaddr == RTE_BAD_PHYS_ADDR) {
+ 		RTE_LOG(ERR, EAL,
+@@ -1002,7 +995,7 @@
+ 					strerror(errno));
+ 			return -1;
+ 		}
+-		mcfg->memseg[0].phys_addr = RTE_BAD_PHYS_ADDR;
++		mcfg->memseg[0].phys_addr = (phys_addr_t)(uintptr_t)addr;
+ 		mcfg->memseg[0].addr = addr;
+ 		mcfg->memseg[0].hugepage_sz = RTE_PGSIZE_4K;
+ 		mcfg->memseg[0].len = internal_config.memory;
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/linuxapp/eal/eal_vfio.c dpdk-17.05/lib/librte_eal/linuxapp/eal/eal_vfio.c
+--- dpdk-stable-17.05.2/lib/librte_eal/linuxapp/eal/eal_vfio.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/linuxapp/eal/eal_vfio.c	2017-05-10 18:11:34.000000000 -0700
+@@ -189,7 +189,7 @@
+ 	int i;
+ 
+ 	i = get_vfio_group_idx(vfio_group_fd);
+-	if (i < 0 || i > (VFIO_MAX_GROUPS - 1))
++	if (i < 0 || i > VFIO_MAX_GROUPS)
+ 		RTE_LOG(ERR, EAL, "  wrong vfio_group index (%d)\n", i);
+ 	else
+ 		vfio_cfg.vfio_groups[i].devices++;
+@@ -201,7 +201,7 @@
+ 	int i;
+ 
+ 	i = get_vfio_group_idx(vfio_group_fd);
+-	if (i < 0 || i > (VFIO_MAX_GROUPS - 1))
++	if (i < 0 || i > VFIO_MAX_GROUPS)
+ 		RTE_LOG(ERR, EAL, "  wrong vfio_group index (%d)\n", i);
+ 	else
+ 		vfio_cfg.vfio_groups[i].devices--;
+@@ -213,7 +213,7 @@
+ 	int i;
+ 
+ 	i = get_vfio_group_idx(vfio_group_fd);
+-	if (i < 0 || i > (VFIO_MAX_GROUPS - 1)) {
++	if (i < 0 || i > VFIO_MAX_GROUPS) {
+ 		RTE_LOG(ERR, EAL, "  wrong vfio_group index (%d)\n", i);
+ 		return -1;
+ 	}
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/linuxapp/kni/compat.h dpdk-17.05/lib/librte_eal/linuxapp/kni/compat.h
+--- dpdk-stable-17.05.2/lib/librte_eal/linuxapp/kni/compat.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/linuxapp/kni/compat.h	2017-05-10 18:11:34.000000000 -0700
+@@ -53,9 +53,7 @@
+ #define HAVE_SK_ALLOC_KERN_PARAM
+ #endif
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0) || \
+-	(defined(RHEL_RELEASE_CODE) && \
+-	 RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(7, 4))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
+ #define HAVE_TRANS_START_HELPER
+ #endif
+ 
+diff -uNr dpdk-stable-17.05.2/lib/librte_eal/linuxapp/kni/ethtool/igb/igb.h dpdk-17.05/lib/librte_eal/linuxapp/kni/ethtool/igb/igb.h
+--- dpdk-stable-17.05.2/lib/librte_eal/linuxapp/kni/ethtool/igb/igb.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eal/linuxapp/kni/ethtool/igb/igb.h	2017-05-10 18:11:34.000000000 -0700
+@@ -607,7 +607,7 @@
+ 	int int_mode;
+ 	u32 rss_queues;
+ 	u32 vmdq_pools;
+-	char fw_version[43];
++	char fw_version[32];
+ 	u32 wvbr;
+ 	struct igb_mac_addr *mac_table;
+ #ifdef CONFIG_IGB_VMDQ_NETDEV
+diff -uNr dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev.c dpdk-17.05/lib/librte_ether/rte_ethdev.c
+--- dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_ether/rte_ethdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2351,7 +2351,6 @@
+ 	struct rte_eth_dev *dev = &rte_eth_devices[port_id];
+ 	unsigned i;
+ 
+-	RTE_ETH_VALID_PORTID_OR_ERR_RET(port_id, -ENODEV);
+ 	rte_eth_dev_info_get(port_id, &dev_info);
+ 
+ 	for (i = 0; i < dev_info.max_mac_addrs; i++)
+diff -uNr dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev.h dpdk-17.05/lib/librte_ether/rte_ethdev.h
+--- dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev.h	2018-03-20 23:13:57.000000000 -0700
++++ dpdk-17.05/lib/librte_ether/rte_ethdev.h	2017-05-10 18:11:34.000000000 -0700
+@@ -216,15 +216,6 @@
+ 	/**< Total number of successfully transmitted queue bytes. */
+ 	uint64_t q_errors[RTE_ETHDEV_QUEUE_STAT_CNTRS];
+ 	/**< Total number of queue packets received that are dropped. */
+-
+-	/** expanded by tsihang for vpp debuging. */
+-	uint64_t rx_drop_red;
+-	uint64_t rx_drop_overrun;
+-	uint64_t rx_drop_bcast;
+-	uint64_t rx_drop_mcast;
+-	uint64_t rx_drop_l3_bcast;
+-	uint64_t rx_drop_l3_mcast;
+-
+ };
+ 
+ /**
+diff -uNr dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev_pci.h dpdk-17.05/lib/librte_ether/rte_ethdev_pci.h
+--- dpdk-stable-17.05.2/lib/librte_ether/rte_ethdev_pci.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_ether/rte_ethdev_pci.h	2017-05-10 18:11:34.000000000 -0700
+@@ -134,12 +134,6 @@
+ 
+ 	eth_dev->data->dev_private = NULL;
+ 
+-	/*
+-	 * Secondary process will check the name to attach.
+-	 * Clear this field to avoid attaching a released ports.
+-	 */
+-	eth_dev->data->name[0] = '\0';
+-
+ 	eth_dev->device = NULL;
+ 	eth_dev->intr_handle = NULL;
+ }
+diff -uNr dpdk-stable-17.05.2/lib/librte_ether/rte_ether_version.map dpdk-17.05/lib/librte_ether/rte_ether_version.map
+--- dpdk-stable-17.05.2/lib/librte_ether/rte_ether_version.map	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_ether/rte_ether_version.map	2017-05-10 18:11:34.000000000 -0700
+@@ -151,7 +151,6 @@
+ 
+ 	rte_eth_dev_attach_secondary;
+ 	rte_eth_find_next;
+-	rte_eth_tx_done_cleanup;
+ 	rte_eth_xstats_get_by_id;
+ 	rte_eth_xstats_get_id_by_name;
+ 	rte_eth_xstats_get_names_by_id;
+diff -uNr dpdk-stable-17.05.2/lib/librte_eventdev/rte_eventdev.c dpdk-17.05/lib/librte_eventdev/rte_eventdev.c
+--- dpdk-stable-17.05.2/lib/librte_eventdev/rte_eventdev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_eventdev/rte_eventdev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -301,7 +301,7 @@
+ 			sizeof(dev->data->links_map[0]) * nb_ports *
+ 			RTE_EVENT_MAX_QUEUES_PER_DEV,
+ 			RTE_CACHE_LINE_SIZE);
+-		if (links_map == NULL) {
++		if (dev->data->links_map == NULL) {
+ 			dev->data->nb_ports = 0;
+ 			RTE_EDEV_LOG_ERR("failed to realloc mem for port_map,"
+ 					"nb_ports %u", nb_ports);
+diff -uNr dpdk-stable-17.05.2/lib/librte_hash/rte_cuckoo_hash.c dpdk-17.05/lib/librte_hash/rte_cuckoo_hash.c
+--- dpdk-stable-17.05.2/lib/librte_hash/rte_cuckoo_hash.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_hash/rte_cuckoo_hash.c	2017-05-10 18:11:34.000000000 -0700
+@@ -538,10 +538,8 @@
+ 			n_slots = rte_ring_mc_dequeue_burst(h->free_slots,
+ 					cached_free_slots->objs,
+ 					LCORE_CACHE_SIZE, NULL);
+-			if (n_slots == 0) {
+-				ret = -ENOSPC;
+-				goto failure;
+-			}
++			if (n_slots == 0)
++				return -ENOSPC;
+ 
+ 			cached_free_slots->len += n_slots;
+ 		}
+@@ -550,10 +548,8 @@
+ 		cached_free_slots->len--;
+ 		slot_id = cached_free_slots->objs[cached_free_slots->len];
+ 	} else {
+-		if (rte_ring_sc_dequeue(h->free_slots, &slot_id) != 0) {
+-			ret = -ENOSPC;
+-			goto failure;
+-		}
++		if (rte_ring_sc_dequeue(h->free_slots, &slot_id) != 0)
++			return -ENOSPC;
+ 	}
+ 
+ 	new_k = RTE_PTR_ADD(keys, (uintptr_t)slot_id * h->key_entry_size);
+@@ -663,7 +659,6 @@
+ 	/* Error in addition, store new slot back in the ring and return error */
+ 	enqueue_slot_back(h, cached_free_slots, (void *)((uintptr_t) new_idx));
+ 
+-failure:
+ 	if (h->add_key == ADD_KEY_MULTIWRITER)
+ 		rte_spinlock_unlock(h->multiwriter_lock);
+ 	return ret;
+diff -uNr dpdk-stable-17.05.2/lib/librte_lpm/rte_lpm.c dpdk-17.05/lib/librte_lpm/rte_lpm.c
+--- dpdk-stable-17.05.2/lib/librte_lpm/rte_lpm.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_lpm/rte_lpm.c	2017-05-10 18:11:34.000000000 -0700
+@@ -1034,7 +1034,7 @@
+ 		 */
+ 
+ 		struct rte_lpm_tbl_entry new_tbl24_entry = {
+-			.group_idx = tbl8_group_index,
++			.group_idx = (uint8_t)tbl8_group_index,
+ 			.valid = VALID,
+ 			.valid_group = 1,
+ 			.depth = 0,
+@@ -1080,7 +1080,7 @@
+ 		 */
+ 
+ 		struct rte_lpm_tbl_entry new_tbl24_entry = {
+-				.group_idx = tbl8_group_index,
++				.group_idx = (uint8_t)tbl8_group_index,
+ 				.valid = VALID,
+ 				.valid_group = 1,
+ 				.depth = 0,
+diff -uNr dpdk-stable-17.05.2/lib/librte_mbuf/rte_mbuf.h dpdk-17.05/lib/librte_mbuf/rte_mbuf.h
+--- dpdk-stable-17.05.2/lib/librte_mbuf/rte_mbuf.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_mbuf/rte_mbuf.h	2017-05-10 18:11:34.000000000 -0700
+@@ -1136,7 +1136,6 @@
+  *    Array size
+  *  @return
+  *   - 0: Success
+- *   - -ENOENT: Not enough entries in the mempool; no mbufs are retrieved.
+  */
+ static inline int rte_pktmbuf_alloc_bulk(struct rte_mempool *pool,
+ 	 struct rte_mbuf **mbufs, unsigned count)
+@@ -1454,7 +1453,7 @@
+  */
+ static inline uint16_t rte_pktmbuf_headroom(const struct rte_mbuf *m)
+ {
+-	__rte_mbuf_sanity_check(m, 0);
++	__rte_mbuf_sanity_check(m, 1);
+ 	return m->data_off;
+ }
+ 
+@@ -1468,7 +1467,7 @@
+  */
+ static inline uint16_t rte_pktmbuf_tailroom(const struct rte_mbuf *m)
+ {
+-	__rte_mbuf_sanity_check(m, 0);
++	__rte_mbuf_sanity_check(m, 1);
+ 	return (uint16_t)(m->buf_len - rte_pktmbuf_headroom(m) -
+ 			  m->data_len);
+ }
+diff -uNr dpdk-stable-17.05.2/lib/librte_mbuf/rte_mbuf_ptype.h dpdk-17.05/lib/librte_mbuf/rte_mbuf_ptype.h
+--- dpdk-stable-17.05.2/lib/librte_mbuf/rte_mbuf_ptype.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_mbuf/rte_mbuf_ptype.h	2017-05-10 18:11:34.000000000 -0700
+@@ -341,11 +341,11 @@
+  * Packet format:
+  * <'ether type'=0x0800
+  * | 'version'=4, 'protocol'=17
+- * | 'destination port'=4789>
++ * | 'destination port'=4798>
+  * or,
+  * <'ether type'=0x86DD
+  * | 'version'=6, 'next header'=17
+- * | 'destination port'=4789>
++ * | 'destination port'=4798>
+  */
+ #define RTE_PTYPE_TUNNEL_VXLAN              0x00003000
+ /**
+diff -uNr dpdk-stable-17.05.2/lib/librte_mempool/rte_mempool.c dpdk-17.05/lib/librte_mempool/rte_mempool.c
+--- dpdk-stable-17.05.2/lib/librte_mempool/rte_mempool.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_mempool/rte_mempool.c	2017-05-10 18:11:34.000000000 -0700
+@@ -476,7 +476,7 @@
+ 		/* required for xen_dom0 to get the machine address */
+ 		paddr = rte_mem_phy2mch(-1, paddr);
+ 
+-		if (paddr == RTE_BAD_PHYS_ADDR && rte_eal_has_hugepages()) {
++		if (paddr == RTE_BAD_PHYS_ADDR) {
+ 			ret = -EINVAL;
+ 			goto fail;
+ 		}
+diff -uNr dpdk-stable-17.05.2/lib/librte_metrics/rte_metrics.c dpdk-17.05/lib/librte_metrics/rte_metrics.c
+--- dpdk-stable-17.05.2/lib/librte_metrics/rte_metrics.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_metrics/rte_metrics.c	2017-05-10 18:11:34.000000000 -0700
+@@ -144,8 +144,6 @@
+ 		entry = &stats->metadata[idx_name + stats->cnt_stats];
+ 		strncpy(entry->name, names[idx_name],
+ 			RTE_METRICS_MAX_NAME_LEN);
+-		/* Enforce NULL-termination */
+-		entry->name[RTE_METRICS_MAX_NAME_LEN - 1] = '\0';
+ 		memset(entry->value, 0, sizeof(entry->value));
+ 		entry->idx_next_stat = idx_name + stats->cnt_stats + 1;
+ 	}
+diff -uNr dpdk-stable-17.05.2/lib/librte_metrics/rte_metrics.h dpdk-17.05/lib/librte_metrics/rte_metrics.h
+--- dpdk-stable-17.05.2/lib/librte_metrics/rte_metrics.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_metrics/rte_metrics.h	2017-05-10 18:11:34.000000000 -0700
+@@ -118,8 +118,7 @@
+  * is required for updating said metric's value.
+  *
+  * @param name
+- *   Metric name. If this exceeds RTE_METRICS_MAX_NAME_LEN (including
+- *   the NULL terminator), it is truncated.
++ *   Metric name
+  *
+  * @return
+  *  - Zero or positive: Success (index key of new metric)
+diff -uNr dpdk-stable-17.05.2/lib/librte_ring/rte_ring.c dpdk-17.05/lib/librte_ring/rte_ring.c
+--- dpdk-stable-17.05.2/lib/librte_ring/rte_ring.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_ring/rte_ring.c	2017-05-10 18:11:34.000000000 -0700
+@@ -189,8 +189,7 @@
+ 	/* reserve a memory zone for this ring. If we can't get rte_config or
+ 	 * we are secondary process, the memzone_reserve function will set
+ 	 * rte_errno for us appropriately - hence no check in this this function */
+-	mz = rte_memzone_reserve_aligned(mz_name, ring_size, socket_id,
+-					 mz_flags, __alignof__(*r));
++	mz = rte_memzone_reserve(mz_name, ring_size, socket_id, mz_flags);
+ 	if (mz != NULL) {
+ 		r = mz->addr;
+ 		/* no need to check return value here, we already checked the
+diff -uNr dpdk-stable-17.05.2/lib/librte_ring/rte_ring.h dpdk-17.05/lib/librte_ring/rte_ring.h
+--- dpdk-stable-17.05.2/lib/librte_ring/rte_ring.h	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_ring/rte_ring.h	2017-05-10 18:11:34.000000000 -0700
+@@ -801,7 +801,7 @@
+ static inline int __attribute__((always_inline))
+ rte_ring_mc_dequeue(struct rte_ring *r, void **obj_p)
+ {
+-	return rte_ring_mc_dequeue_bulk(r, obj_p, 1, NULL)  ? 0 : -ENOENT;
++	return rte_ring_mc_dequeue_bulk(r, obj_p, 1, NULL)  ? 0 : -ENOBUFS;
+ }
+ 
+ /**
+@@ -819,7 +819,7 @@
+ static inline int __attribute__((always_inline))
+ rte_ring_sc_dequeue(struct rte_ring *r, void **obj_p)
+ {
+-	return rte_ring_sc_dequeue_bulk(r, obj_p, 1, NULL) ? 0 : -ENOENT;
++	return rte_ring_sc_dequeue_bulk(r, obj_p, 1, NULL) ? 0 : -ENOBUFS;
+ }
+ 
+ /**
+diff -uNr dpdk-stable-17.05.2/lib/librte_vhost/vhost.c dpdk-17.05/lib/librte_vhost/vhost.c
+--- dpdk-stable-17.05.2/lib/librte_vhost/vhost.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_vhost/vhost.c	2017-05-10 18:11:34.000000000 -0700
+@@ -272,7 +272,7 @@
+ 	if (!(dev->flags & VIRTIO_DEV_READY))
+ 		return -EAGAIN;
+ 
+-	if (!(dev->features & (1ULL << VIRTIO_NET_F_MTU)))
++	if (!(dev->features & VIRTIO_NET_F_MTU))
+ 		return -ENOTSUP;
+ 
+ 	*mtu = dev->mtu;
+@@ -369,7 +369,7 @@
+ 		return -1;
+ 
+ 	size = dev->mem->nregions * sizeof(struct rte_vhost_mem_region);
+-	m = malloc(sizeof(struct rte_vhost_memory) + size);
++	m = malloc(size);
+ 	if (!m)
+ 		return -1;
+ 
+diff -uNr dpdk-stable-17.05.2/lib/librte_vhost/vhost_user.c dpdk-17.05/lib/librte_vhost/vhost_user.c
+--- dpdk-stable-17.05.2/lib/librte_vhost/vhost_user.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_vhost/vhost_user.c	2017-05-10 18:11:34.000000000 -0700
+@@ -114,10 +114,6 @@
+ 		rte_free(dev->mem);
+ 		dev->mem = NULL;
+ 	}
+-
+-	free(dev->guest_pages);
+-	dev->guest_pages = NULL;
+-
+ 	if (dev->log_addr) {
+ 		munmap((void *)(uintptr_t)dev->log_addr, dev->log_size);
+ 		dev->log_addr = 0;
+@@ -242,6 +238,8 @@
+ 	struct vhost_virtqueue *old_vq, *vq;
+ 	int ret;
+ 
++	enum {VIRTIO_RXQ, VIRTIO_TXQ, VIRTIO_QNUM};
++
+ 	old_dev = dev;
+ 	vq = old_vq = dev->virtqueue[index];
+ 
+@@ -263,7 +261,7 @@
+ 		if (!vq)
+ 			return dev;
+ 
+-		memcpy(vq, old_vq, sizeof(*vq));
++		memcpy(vq, old_vq, sizeof(*vq) * VIRTIO_QNUM);
+ 		rte_free(old_vq);
+ 	}
+ 
+diff -uNr dpdk-stable-17.05.2/lib/librte_vhost/virtio_net.c dpdk-17.05/lib/librte_vhost/virtio_net.c
+--- dpdk-stable-17.05.2/lib/librte_vhost/virtio_net.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/lib/librte_vhost/virtio_net.c	2017-05-10 18:11:34.000000000 -0700
+@@ -114,16 +114,11 @@
+ static void
+ virtio_enqueue_offload(struct rte_mbuf *m_buf, struct virtio_net_hdr *net_hdr)
+ {
+-	uint64_t csum_l4 = m_buf->ol_flags & PKT_TX_L4_MASK;
+-
+-	if (m_buf->ol_flags & PKT_TX_TCP_SEG)
+-		csum_l4 |= PKT_TX_TCP_CKSUM;
+-
+-	if (csum_l4) {
++	if (m_buf->ol_flags & PKT_TX_L4_MASK) {
+ 		net_hdr->flags = VIRTIO_NET_HDR_F_NEEDS_CSUM;
+ 		net_hdr->csum_start = m_buf->l2_len + m_buf->l3_len;
+ 
+-		switch (csum_l4) {
++		switch (m_buf->ol_flags & PKT_TX_L4_MASK) {
+ 		case PKT_TX_TCP_CKSUM:
+ 			net_hdr->csum_offset = (offsetof(struct tcp_hdr,
+ 						cksum));
+@@ -143,15 +138,6 @@
+ 		ASSIGN_UNLESS_EQUAL(net_hdr->flags, 0);
+ 	}
+ 
+-	/* IP cksum verification cannot be bypassed, then calculate here */
+-	if (m_buf->ol_flags & PKT_TX_IP_CKSUM) {
+-		struct ipv4_hdr *ipv4_hdr;
+-
+-		ipv4_hdr = rte_pktmbuf_mtod_offset(m_buf, struct ipv4_hdr *,
+-						   m_buf->l2_len);
+-		ipv4_hdr->hdr_checksum = rte_ipv4_cksum(ipv4_hdr);
+-	}
+-
+ 	if (m_buf->ol_flags & PKT_TX_TCP_SEG) {
+ 		if (m_buf->ol_flags & PKT_TX_IPV4)
+ 			net_hdr->gso_type = VIRTIO_NET_HDR_GSO_TCPV4;
+@@ -615,11 +601,9 @@
+ virtio_net_with_host_offload(struct virtio_net *dev)
+ {
+ 	if (dev->features &
+-			((1ULL << VIRTIO_NET_F_CSUM) |
+-			 (1ULL << VIRTIO_NET_F_HOST_ECN) |
+-			 (1ULL << VIRTIO_NET_F_HOST_TSO4) |
+-			 (1ULL << VIRTIO_NET_F_HOST_TSO6) |
+-			 (1ULL << VIRTIO_NET_F_HOST_UFO)))
++			(VIRTIO_NET_F_CSUM | VIRTIO_NET_F_HOST_ECN |
++			 VIRTIO_NET_F_HOST_TSO4 | VIRTIO_NET_F_HOST_TSO6 |
++			 VIRTIO_NET_F_HOST_UFO))
+ 		return true;
+ 
+ 	return false;
+diff -uNr dpdk-stable-17.05.2/pkg/dpdk.spec dpdk-17.05/pkg/dpdk.spec
+--- dpdk-stable-17.05.2/pkg/dpdk.spec	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/pkg/dpdk.spec	2017-05-10 18:11:34.000000000 -0700
+@@ -30,7 +30,7 @@
+ # OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ Name: dpdk
+-Version: 17.05.2
++Version: 17.05
+ Release: 1
+ Packager: packaging@6wind.com
+ URL: http://dpdk.org
+diff -uNr dpdk-stable-17.05.2/test/test/test_cryptodev.c dpdk-17.05/test/test/test_cryptodev.c
+--- dpdk-stable-17.05.2/test/test/test_cryptodev.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/test/test/test_cryptodev.c	2017-05-10 18:11:34.000000000 -0700
+@@ -3581,7 +3581,8 @@
+ 	rte_hexdump(stdout, "ciphertext:", ciphertext, plaintext_len);
+ #endif
+ 
+-	expected_ciphertext_shifted = rte_malloc(NULL, plaintext_len, 8);
++	expected_ciphertext_shifted = rte_malloc(NULL,
++			ceil_byte_length(plaintext_len + extra_offset), 0);
+ 
+ 	TEST_ASSERT_NOT_NULL(expected_ciphertext_shifted,
+ 			"failed to reserve memory for ciphertext shifted\n");
+diff -uNr dpdk-stable-17.05.2/test/test/test_cryptodev_perf.c dpdk-17.05/test/test/test_cryptodev_perf.c
+--- dpdk-stable-17.05.2/test/test/test_cryptodev_perf.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/test/test/test_cryptodev_perf.c	2017-05-10 18:11:34.000000000 -0700
+@@ -2634,11 +2634,6 @@
+ 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+ };
+ 
+-static uint8_t aes_gcm_aad[] = {
+-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+-};
+-
+ static uint8_t triple_des_key[] = {
+ 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+@@ -2900,7 +2895,7 @@
+ 
+ #define AES_BLOCK_SIZE 16
+ #define AES_CIPHER_IV_LENGTH 16
+-#define AES_GCM_AAD_LENGTH 16
++
+ #define TRIPLE_DES_BLOCK_SIZE 8
+ #define TRIPLE_DES_CIPHER_IV_LENGTH 8
+ 
+@@ -2944,6 +2939,8 @@
+ 		op->sym->auth.digest.phys_addr = rte_pktmbuf_mtophys_offset(m,
+ 				AES_CIPHER_IV_LENGTH + data_len);
+ 		op->sym->auth.digest.length = digest_len;
++		op->sym->auth.aad.data = aes_iv;
++		op->sym->auth.aad.length = AES_CIPHER_IV_LENGTH;
+ 		op->sym->auth.data.offset = AES_CIPHER_IV_LENGTH;
+ 		op->sym->auth.data.length = data_len;
+ 	}
+@@ -2980,8 +2977,8 @@
+ 	op->sym->auth.digest.phys_addr =
+ 				rte_pktmbuf_mtophys_offset(m, data_len);
+ 	op->sym->auth.digest.length = digest_len;
+-	op->sym->auth.aad.data = aes_gcm_aad;
+-	op->sym->auth.aad.length = AES_GCM_AAD_LENGTH;
++	op->sym->auth.aad.data = aes_iv;
++	op->sym->auth.aad.length = AES_CIPHER_IV_LENGTH;
+ 
+ 	/* Cipher Parameters */
+ 	op->sym->cipher.iv.data = aes_iv;
+@@ -3113,6 +3110,8 @@
+ 	op->sym->auth.digest.phys_addr =
+ 				rte_pktmbuf_mtophys_offset(m, data_len);
+ 	op->sym->auth.digest.length = digest_len;
++	op->sym->auth.aad.data = triple_des_iv;
++	op->sym->auth.aad.length = TRIPLE_DES_CIPHER_IV_LENGTH;
+ 
+ 	/* Cipher Parameters */
+ 	op->sym->cipher.iv.data = triple_des_iv;
+diff -uNr dpdk-stable-17.05.2/test/test/test_link_bonding.c dpdk-17.05/test/test/test_link_bonding.c
+--- dpdk-stable-17.05.2/test/test/test_link_bonding.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/test/test/test_link_bonding.c	2017-05-10 18:11:34.000000000 -0700
+@@ -83,7 +83,7 @@
+ #define MAX_PKT_BURST			(512)
+ #define DEF_PKT_BURST			(16)
+ 
+-#define BONDED_DEV_NAME			("net_bonding_ut")
++#define BONDED_DEV_NAME			("unit_test_bond_dev")
+ 
+ #define INVALID_SOCKET_ID		(-1)
+ #define INVALID_PORT_ID			(-1)
+@@ -221,10 +221,6 @@
+ 
+ };
+ 
+-static void free_virtualpmd_tx_queue(void);
+-
+-
+-
+ static int
+ configure_ethdev(uint8_t port_id, uint8_t start, uint8_t en_isr)
+ {
+@@ -688,7 +684,6 @@
+ remove_slaves_and_stop_bonded_device(void)
+ {
+ 	/* Clean up and remove slaves from bonded device */
+-	free_virtualpmd_tx_queue();
+ 	while (test_params->bonded_slave_count > 0)
+ 		TEST_ASSERT_SUCCESS(test_remove_slave_from_bonded_device(),
+ 				"test_remove_slave_from_bonded_device failed");
+@@ -944,7 +939,7 @@
+ 	/*
+ 	 * 1. a - Create / configure  bonded / slave ethdevs
+ 	 */
+-	bonded_port_id = rte_eth_bond_create("net_bonding_mac_ass_test",
++	bonded_port_id = rte_eth_bond_create("ethdev_bond_mac_ass_test",
+ 			BONDING_MODE_ACTIVE_BACKUP, rte_socket_id());
+ 	TEST_ASSERT(bonded_port_id > 0, "failed to create bonded device");
+ 
+@@ -1622,6 +1617,9 @@
+ 
+ 	/* free mbufs */
+ 	for (i = 0; i < MAX_PKT_BURST; i++) {
++		if (gen_pkt_burst[i] != NULL)
++			rte_pktmbuf_free(gen_pkt_burst[i]);
++
+ 		if (rx_pkt_burst[i] != NULL)
+ 			rte_pktmbuf_free(rx_pkt_burst[i]);
+ 	}
+@@ -1968,6 +1966,12 @@
+ 	for (i = 0; i < MAX_PKT_BURST; i++) {
+ 		if (rx_pkt_burst[i] != NULL)
+ 			rte_pktmbuf_free(rx_pkt_burst[i]);
++
++		if (gen_pkt_burst[1][i] != NULL)
++			rte_pktmbuf_free(gen_pkt_burst[1][i]);
++
++		if (gen_pkt_burst[3][i] != NULL)
++			rte_pktmbuf_free(gen_pkt_burst[1][i]);
+ 	}
+ 
+ 	/* Clean up and remove slaves from bonded device */
+@@ -2406,7 +2410,7 @@
+ 
+ 	uint8_t slaves[RTE_MAX_ETHPORTS];
+ 
+-	int i, burst_size, slave_count, primary_port;
++	int i, j, burst_size, slave_count, primary_port;
+ 
+ 	burst_size = 21;
+ 
+@@ -2539,6 +2543,16 @@
+ 			"(%d) port_stats.opackets not as expected",
+ 			test_params->slave_port_ids[3]);
+ 
++	/* free mbufs */
++	for (i = 0; i < TEST_ACTIVE_BACKUP_RX_BURST_SLAVE_COUNT; i++) {
++		for (j = 0; j < MAX_PKT_BURST; j++) {
++			if (pkt_burst[i][j] != NULL) {
++				rte_pktmbuf_free(pkt_burst[i][j]);
++				pkt_burst[i][j] = NULL;
++			}
++		}
++	}
++
+ 	/* Clean up and remove slaves from bonded device */
+ 	return remove_slaves_and_stop_bonded_device();
+ }
+@@ -2771,7 +2785,7 @@
+ static int
+ test_balance_l23_tx_burst_ipv4_toggle_ip_addr(void)
+ {
+-	return balance_l23_tx_burst(0, 1, 0, 1);
++	return balance_l23_tx_burst(0, 1, 1, 0);
+ }
+ 
+ static int
+@@ -3300,7 +3314,7 @@
+ 
+ 	uint8_t slaves[RTE_MAX_ETHPORTS];
+ 
+-	int i, burst_size, slave_count;
++	int i, j, burst_size, slave_count;
+ 
+ 	memset(pkt_burst, 0, sizeof(pkt_burst));
+ 
+@@ -3438,6 +3452,16 @@
+ 			test_params->bonded_port_id, (int)port_stats.ipackets,
+ 			burst_size * 3);
+ 
++	/* free mbufs allocate for rx testing */
++	for (i = 0; i < TEST_BALANCE_RX_BURST_SLAVE_COUNT; i++) {
++		for (j = 0; j < MAX_PKT_BURST; j++) {
++			if (pkt_burst[i][j] != NULL) {
++				rte_pktmbuf_free(pkt_burst[i][j]);
++				pkt_burst[i][j] = NULL;
++			}
++		}
++	}
++
+ 	/* Clean up and remove slaves from bonded device */
+ 	return remove_slaves_and_stop_bonded_device();
+ }
+@@ -3859,7 +3883,7 @@
+ 
+ 	uint8_t slaves[RTE_MAX_ETHPORTS];
+ 
+-	int i, burst_size, slave_count;
++	int i, j, burst_size, slave_count;
+ 
+ 	memset(pkt_burst, 0, sizeof(pkt_burst));
+ 
+@@ -3956,6 +3980,16 @@
+ 			"(%d) port_stats.ipackets not as expected\n",
+ 			test_params->bonded_port_id);
+ 
++	/* free mbufs allocate for rx testing */
++	for (i = 0; i < BROADCAST_LINK_STATUS_NUM_OF_SLAVES; i++) {
++		for (j = 0; j < MAX_PKT_BURST; j++) {
++			if (pkt_burst[i][j] != NULL) {
++				rte_pktmbuf_free(pkt_burst[i][j]);
++				pkt_burst[i][j] = NULL;
++			}
++		}
++	}
++
+ 	/* Clean up and remove slaves from bonded device */
+ 	return remove_slaves_and_stop_bonded_device();
+ }
+@@ -4371,7 +4405,7 @@
+ 
+ 	uint8_t slaves[RTE_MAX_ETHPORTS];
+ 
+-	int i, burst_size, slave_count, primary_port;
++	int i, j, burst_size, slave_count, primary_port;
+ 
+ 	burst_size = 21;
+ 
+@@ -4489,6 +4523,18 @@
+ 			"(%d) port_stats.ipackets not as expected\n",
+ 			test_params->bonded_port_id);
+ 
++	/* free mbufs */
++
++	for (i = 0; i < TEST_ADAPTIVE_TRANSMIT_LOAD_BALANCING_RX_BURST_SLAVE_COUNT; i++) {
++		for (j = 0; j < MAX_PKT_BURST; j++) {
++			if (pkt_burst[i][j] != NULL) {
++				rte_pktmbuf_free(pkt_burst[i][j]);
++				pkt_burst[i][j] = NULL;
++			}
++		}
++	}
++
++
+ 	/* Clean up and remove slaves from bonded device */
+ 	return remove_slaves_and_stop_bonded_device();
+ }
+diff -uNr dpdk-stable-17.05.2/test/test/test_link_bonding_mode4.c dpdk-17.05/test/test/test_link_bonding_mode4.c
+--- dpdk-stable-17.05.2/test/test/test_link_bonding_mode4.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/test/test/test_link_bonding_mode4.c	2017-05-10 18:11:34.000000000 -0700
+@@ -73,11 +73,11 @@
+ #define MAX_PKT_BURST           (32)
+ #define DEF_PKT_BURST           (16)
+ 
+-#define BONDED_DEV_NAME         ("ut_mode4_bond_dev")
++#define BONDED_DEV_NAME         ("unit_test_mode4_bond_dev")
+ 
+-#define SLAVE_DEV_NAME_FMT      ("ut_mode4_slave_%d")
+-#define SLAVE_RX_QUEUE_FMT      ("ut_mode4_slave_%d_rx")
+-#define SLAVE_TX_QUEUE_FMT      ("ut_mode4_slave_%d_tx")
++#define SLAVE_DEV_NAME_FMT      ("unit_test_mode4_slave_%d")
++#define SLAVE_RX_QUEUE_FMT      ("unit_test_mode4_slave_%d_rx")
++#define SLAVE_TX_QUEUE_FMT      ("unit_test_mode4_slave_%d_tx")
+ 
+ #define INVALID_SOCKET_ID       (-1)
+ #define INVALID_PORT_ID         (0xFF)
+diff -uNr dpdk-stable-17.05.2/test/test/test_link_bonding_rssconf.c dpdk-17.05/test/test/test_link_bonding_rssconf.c
+--- dpdk-stable-17.05.2/test/test/test_link_bonding_rssconf.c	2017-09-07 01:14:50.000000000 -0700
++++ dpdk-17.05/test/test/test_link_bonding_rssconf.c	2017-05-10 18:11:34.000000000 -0700
+@@ -60,7 +60,7 @@
+ #define RXTX_RING_SIZE			1024
+ #define RXTX_QUEUE_COUNT		4
+ 
+-#define BONDED_DEV_NAME         ("net_bonding_rss")
++#define BONDED_DEV_NAME         ("rssconf_bond_dev")
+ 
+ #define SLAVE_DEV_NAME_FMT      ("rssconf_slave%d")
+ #define SLAVE_RXTX_QUEUE_FMT      ("rssconf_slave%d_q%d")

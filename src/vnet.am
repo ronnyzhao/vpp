@@ -887,6 +887,18 @@ nobase_include_HEADERS +=			\
 API_FILES += vnet/devices/netmap/netmap.api
 
 ########################################
+# TERASPEK interface
+########################################
+
+libvnet_la_SOURCES +=				\
+  vnet/teraspek/loopback.c
+
+nobase_include_HEADERS +=			\
+  vnet/teraspek/loopback.h		
+
+
+
+########################################
 # Driver feature graph arc support
 ########################################
 
