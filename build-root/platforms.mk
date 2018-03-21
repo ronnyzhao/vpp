@@ -35,9 +35,9 @@
 #
 
 # Platform selects e.g. Linux config file
-PLATFORM = aarch64
+PLATFORM = native
 
-native_arch = aarch64
+native_arch = native
 
 # Default for which packages go into read-only image
 # used to have pam

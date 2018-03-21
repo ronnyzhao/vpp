@@ -11,7 +11,7 @@ dpdk_xz=$name-$version$prefix
 target_dir=deb/_build
 
 cd $target_dir
-rm -rf $target/$RTE_TARGET
+rm -rf $dpdk_home/$RTE_TARGET
 tar -jcf $dpdk_xz $dpdk_home
 
 cd $cur_path

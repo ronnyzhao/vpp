@@ -17,14 +17,16 @@
 /build-root/test-cov/
 /build-root/python/
 /build-config.mk
-/dpdk/*.tar.gz
-/dpdk/*.tar.xz
+# /dpdk/*.tar.gz
+# /dpdk/*.tar.xz
+/dpdk/*.deb
+/dpdk/*.rpm
 /path_setup
 /tools/
 # start autotools ignore
 autom4te.cache/
 config/
-Makefile
+#Makefile
 Makefile.in
 aclocal.m4
 app.info
