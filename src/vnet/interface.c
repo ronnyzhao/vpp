@@ -1201,6 +1201,15 @@ vnet_interface_init (vlib_main_t * vm)
   im->sw_if_counters[VNET_INTERFACE_COUNTER_RX_ERROR].name = "rx-error";
   im->sw_if_counters[VNET_INTERFACE_COUNTER_TX_ERROR].name = "tx-error";
 
+#if defined(rx_miss_reason_debug_enable)
+  im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_RED].name = "rx-miss-red";
+   im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_OVERRUN].name = "rx-miss-overrun";
+     im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_BCAST].name = "rx-miss-bcast";
+	   im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_MCAST].name = "rx-miss-mcast";
+	     im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_L3_BCAST].name = "rx-miss-l3-bcast";
+		 	     im->sw_if_counters[VNET_INTERFACE_COUNTER_DROP_L3_BCAST].name = "rx-miss-l3-mcast";   
+#endif
+
   vec_validate (im->combined_sw_if_counters,
 		VNET_N_COMBINED_INTERFACE_COUNTER - 1);
   im->combined_sw_if_counters[VNET_INTERFACE_COUNTER_RX].name = "rx";

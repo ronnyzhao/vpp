@@ -8,7 +8,8 @@ prefix=".tar.xz"
 dpdk_home=$name-$r-$version
 dpdk_xz=$name-$version$prefix
 
-target_dir=deb/_build
+#target_dir=deb/_build
+target_dir=./
 
 cd $target_dir
 rm -rf $dpdk_home/$RTE_TARGET

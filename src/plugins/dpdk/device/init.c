@@ -342,6 +342,9 @@ dpdk_lib_init (dpdk_main_t * dm)
 	    else
 	    xd->pmd = VNET_DPDK_PMD_UNKNOWN;
 
+		clib_error("******** drv_info.driver_name =%s, %sxd->pmd = %d", dev_info.driver_name,
+			xd->pmd);
+
 	  xd->port_type = VNET_DPDK_PORT_TYPE_UNKNOWN;
 	  xd->nb_rx_desc = DPDK_NB_RX_DESC_DEFAULT;
 	  xd->nb_tx_desc = DPDK_NB_TX_DESC_DEFAULT;

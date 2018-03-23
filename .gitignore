@@ -21,6 +21,8 @@
 # /dpdk/*.tar.xz
 /dpdk/*.deb
 /dpdk/*.rpm
+/dpdk/dpdk-src
+/dpdk/dpdk-stable*
 /path_setup
 /tools/
 # start autotools ignore

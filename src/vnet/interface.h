@@ -599,6 +599,8 @@ typedef struct
   vnet_flood_class_t flood_class;
 } vnet_sw_interface_t;
 
+#define rx_miss_reason_debug_enable
+
 typedef enum
 {
   /* Simple counters. */
@@ -611,12 +613,35 @@ typedef enum
   VNET_INTERFACE_COUNTER_RX_ERROR = 6,
   VNET_INTERFACE_COUNTER_TX_ERROR = 7,
   VNET_INTERFACE_COUNTER_MPLS = 8,
-  VNET_N_SIMPLE_INTERFACE_COUNTER = 9,
+
+#if defined(rx_miss_reason_debug_enable)
+ /** rte_ethdev.h 
+  uint64_t rx_drop_red;
+  uint64_t rx_drop_overrun;
+  uint64_t rx_drop_bcast;
+  uint64_t rx_drop_mcast;
+  uint64_t rx_drop_l3_bcast;
+  uint64_t rx_drop_l3_mcast;
+ */
+  VNET_INTERFACE_COUNTER_DROP_RED = 9,
+  VNET_INTERFACE_COUNTER_DROP_OVERRUN = 10,
+  VNET_INTERFACE_COUNTER_DROP_BCAST = 11,
+  VNET_INTERFACE_COUNTER_DROP_MCAST = 12,
+  VNET_INTERFACE_COUNTER_DROP_L3_BCAST = 13,
+  VNET_INTERFACE_COUNTER_DROP_L3_MCAST = 14,
+#endif
+
+#if defined(rx_miss_reason_debug_enable)
+  VNET_N_SIMPLE_INTERFACE_COUNTER = 15,
+#else
+  NET_N_SIMPLE_INTERFACE_COUNTER = 9,
+#endif
   /* Combined counters. */
   VNET_INTERFACE_COUNTER_RX = 0,
   VNET_INTERFACE_COUNTER_TX = 1,
   VNET_N_COMBINED_INTERFACE_COUNTER = 2,
 } vnet_interface_counter_type_t;
+
 
 typedef struct
 {

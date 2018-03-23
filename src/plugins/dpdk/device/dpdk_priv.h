@@ -110,6 +110,52 @@ dpdk_update_counters (dpdk_device_t * xd, f64 now)
       vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
 				     xd->stats.imissed -
 				     xd->last_stats.imissed);
+
+#if defined (rx_miss_reason_debug_enable)
+	 cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+				VNET_INTERFACE_COUNTER_DROP_RED);
+	 
+	 vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+					xd->stats.rx_drop_red -
+					xd->last_stats.rx_drop_red);
+
+	cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+			   VNET_INTERFACE_COUNTER_DROP_OVERRUN);
+	
+	vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+				   xd->stats.rx_drop_overrun -
+				   xd->last_stats.rx_drop_overrun);
+
+   cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+			  VNET_INTERFACE_COUNTER_DROP_BCAST);
+   
+   vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+				  xd->stats.rx_drop_bcast -
+				  xd->last_stats.rx_drop_bcast);
+
+  cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+			 VNET_INTERFACE_COUNTER_DROP_MCAST);
+  
+  vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+				 xd->stats.rx_drop_mcast -
+				 xd->last_stats.rx_drop_mcast);
+				  
+	   cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+			  VNET_INTERFACE_COUNTER_DROP_L3_BCAST);
+   
+	   vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+					  xd->stats.rx_drop_l3_bcast -
+					  xd->last_stats.rx_drop_l3_bcast);
+
+	  cm = vec_elt_at_index (vnm->interface_main.sw_if_counters,
+			 VNET_INTERFACE_COUNTER_DROP_L3_MCAST);
+  
+  vlib_increment_simple_counter (cm, thread_index, xd->vlib_sw_if_index,
+				 xd->stats.rx_drop_l3_mcast -
+				 xd->last_stats.rx_drop_l3_mcast);
+				  
+#endif
+
     }
   rxerrors = xd->stats.ierrors;
   last_rxerrors = xd->last_stats.ierrors;

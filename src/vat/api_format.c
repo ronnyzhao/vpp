@@ -5126,6 +5126,20 @@ counter_type_to_str (u8 counter_type, u8 is_combined)
 	  return "rx-error";
 	case VNET_INTERFACE_COUNTER_TX_ERROR:
 	  return "tx-error";
+#if defined (rx_miss_reason_debug_enable)
+	case VNET_INTERFACE_COUNTER_DROP_RED:
+	  return "rx-miss-red";
+	case VNET_INTERFACE_COUNTER_DROP_OVERRUN:
+	  return "rx-miss-overrun";
+	case VNET_INTERFACE_COUNTER_DROP_BCAST:
+	  return "rx-miss-bcast";
+	case VNET_INTERFACE_COUNTER_DROP_MCAST:
+	  return "rx-miss-mcast";
+	  case VNET_INTERFACE_COUNTER_DROP_L3_BCAST:
+		return "rx-miss-l3-bcast";
+	  case VNET_INTERFACE_COUNTER_DROP_L3_MCAST:
+		return "rx-miss-l3-mcast";
+#endif
 	default:
 	  return "INVALID-COUNTER-TYPE";
 	}
