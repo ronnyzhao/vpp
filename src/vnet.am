@@ -891,10 +891,16 @@ API_FILES += vnet/devices/netmap/netmap.api
 ########################################
 
 libvnet_la_SOURCES +=				\
-  vnet/teraspek/loopback.c
+  vnet/teraspek/loopback.c			\
+  vnet/teraspek/memory.c			\
+  vnet/teraspek/mpm.c				\
+  vnet/teraspek/mpm-hs.c
 
 nobase_include_HEADERS +=			\
-  vnet/teraspek/loopback.h		
+  vnet/teraspek/loopback.h			\
+  vnet/teraspek/memory.h			\
+  vnet/teraspek/mpm.h				\
+  vnet/teraspek/mpm-hs.h
 
 
 

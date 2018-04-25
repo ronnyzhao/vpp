@@ -19,6 +19,8 @@
 #include <vnet/unix/pcap.h>
 #include <vnet/l3_types.h>
 
+/** loopback.c */
+#define have_loopback_input_node
 typedef enum
 {
   VNET_DEVICE_INPUT_NEXT_IP4_NCS_INPUT,
@@ -26,10 +28,24 @@ typedef enum
   VNET_DEVICE_INPUT_NEXT_IP6_INPUT,
   VNET_DEVICE_INPUT_NEXT_MPLS_INPUT,
   VNET_DEVICE_INPUT_NEXT_ETHERNET_INPUT,
+#if defined (have_loopback_input_node)
+  VNET_DEVICE_INPUT_NEXT_LOOPBACK_INPUT,
+#endif
   VNET_DEVICE_INPUT_NEXT_DROP,
   VNET_DEVICE_INPUT_N_NEXT_NODES,
 } vnet_device_input_next_t;
 
+#if defined (have_loopback_input_node)
+#define VNET_DEVICE_INPUT_NEXT_NODES {					\
+    [VNET_DEVICE_INPUT_NEXT_DROP] = "error-drop",			\
+    [VNET_DEVICE_INPUT_NEXT_ETHERNET_INPUT] = "ethernet-input",		\
+    [VNET_DEVICE_INPUT_NEXT_IP4_NCS_INPUT] = "ip4-input-no-checksum",	\
+    [VNET_DEVICE_INPUT_NEXT_IP4_INPUT] = "ip4-input",			\
+    [VNET_DEVICE_INPUT_NEXT_IP6_INPUT] = "ip6-input",			\
+    [VNET_DEVICE_INPUT_NEXT_MPLS_INPUT] = "mpls-input",			\
+    [VNET_DEVICE_INPUT_NEXT_LOOPBACK_INPUT] = "loopback-input",	\
+}
+#else
 #define VNET_DEVICE_INPUT_NEXT_NODES {					\
     [VNET_DEVICE_INPUT_NEXT_DROP] = "error-drop",			\
     [VNET_DEVICE_INPUT_NEXT_ETHERNET_INPUT] = "ethernet-input",		\
@@ -38,6 +54,7 @@ typedef enum
     [VNET_DEVICE_INPUT_NEXT_IP6_INPUT] = "ip6-input",			\
     [VNET_DEVICE_INPUT_NEXT_MPLS_INPUT] = "mpls-input",			\
 }
+#endif
 
 typedef struct
 {
